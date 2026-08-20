@@ -1,0 +1,50 @@
+services:
+  database:
+    image: postgres:16.6-alpine
+    environment:
+      POSTGRES_DB: faculty_evaluation
+      POSTGRES_USER: faculty_app
+      POSTGRES_PASSWORD: faculty_app_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U faculty_app -d faculty_evaluation"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: faculty-evaluation-common-backend:0.1.0
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    pull_policy: build
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://database:5432/faculty_evaluation
+      SPRING_DATASOURCE_USERNAME: faculty_app
+      SPRING_DATASOURCE_PASSWORD: faculty_app_password
+    depends_on:
+      database:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/api/health >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  frontend:
+    image: faculty-evaluation-common-frontend:0.1.0
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+    pull_policy: build
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "3000:80"
+
+volumes:
+  postgres-data:
