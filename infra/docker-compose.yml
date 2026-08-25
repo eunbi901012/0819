@@ -1,0 +1,43 @@
+services:
+  database:
+    image: postgres:16.4-alpine
+    environment:
+      POSTGRES_DB: aiops
+      POSTGRES_USER: aiops
+      POSTGRES_PASSWORD: aiops
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aiops -d aiops"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  backend:
+    image: faculty-performance-common-backend:0.1.0
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    pull_policy: build
+    environment:
+      DB_URL: jdbc:postgresql://database:5432/aiops
+      DB_USERNAME: aiops
+      DB_PASSWORD: aiops
+    depends_on:
+      database:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/api/health | grep UP"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  frontend:
+    image: faculty-performance-common-frontend:0.1.0
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    pull_policy: build
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "3000:80"
