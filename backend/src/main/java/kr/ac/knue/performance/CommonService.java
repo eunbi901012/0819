@@ -1,0 +1,362 @@
+package kr.ac.knue.performance;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public class CommonService {
+    private final CommonMapper mapper;
+    private final ObjectMapper objectMapper;
+
+    public CommonService(CommonMapper mapper, ObjectMapper objectMapper) {
+        this.mapper = mapper;
+        this.objectMapper = objectMapper;
+    }
+
+    public Map<String, Object> health() {
+        return Map.of("status", "UP", "service", "faculty-performance-common");
+    }
+
+    @Transactional
+    public CurrentUser login(LoginRequest request) {
+        if (request == null || blank(request.loginId()) || blank(request.password())) {
+            throw bad("VALIDATION_ERROR", "로그인 정보를 입력하세요.", Map.of("loginId", "required", "password", "required"));
+        }
+        Map<String, Object> user = mapper.authenticate(request.loginId(), request.password());
+        if (user == null) throw new ApiException(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "계정 또는 비밀번호를 확인하세요.", Map.of());
+        String sessionId = UUID.randomUUID().toString();
+        mapper.createSession(sessionId, str(user.get("userId")));
+        LastSessionHolder.set(sessionId);
+        RequestContext.setActor(str(user.get("userId")));
+        history("session", sessionId, null, Map.of("userId", str(user.get("userId")), "status", "ACTIVE"), "로그인");
+        return currentUser(user);
+    }
+
+    public CurrentUser currentUser(String sessionId) {
+        Map<String, Object> user = requireSession(sessionId);
+        return currentUser(user);
+    }
+
+    @Transactional
+    public Map<String, Object> logout(String sessionId, GenericRequest request) {
+        requireSession(sessionId);
+        Map<String, Object> before = mapper.byId("session", "session_id", sessionId);
+        mapper.expireSession(sessionId);
+        Map<String, Object> after = mapper.byId("session", "session_id", sessionId);
+        history("session", sessionId, before, after, request == null ? null : request.reason());
+        return Map.of("loggedOut", true);
+    }
+
+    public Map<String, Object> requireSession(String sessionId) {
+        if (blank(sessionId)) throw new ApiException(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "인증 세션이 필요합니다.", Map.of());
+        Map<String, Object> user = mapper.sessionUser(sessionId);
+        if (user == null) throw new ApiException(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "인증 세션이 만료되었습니다.", Map.of());
+        List<String> roles = mapper.rolesForUser(str(user.get("userId")));
+        if (!roles.contains("R09")) throw new ApiException(HttpStatus.FORBIDDEN, "FORBIDDEN", "R09 시스템관리자 권한이 필요합니다.", Map.of("requiredRole", "R09"));
+        RequestContext.setActor(str(user.get("userId")));
+        return user;
+    }
+
+    public PageResult page(List<Map<String, Object>> items, int page, int size) {
+        return new PageResult(items, page, size, items.size());
+    }
+
+    public PageResult users(String filter, String roleCode, Boolean systemEnabled, int page, int size) {
+        return page(normalizeUsers(mapper.users(filter, roleCode, systemEnabled, size, page * size)), page, size);
+    }
+
+    public PageResult organizations(String filter, int page, int size) {
+        return page(mapper.organizations(filter, size, page * size), page, size);
+    }
+
+    public PageResult roles(String filter) {
+        return page(mapper.roles(filter), 0, 100);
+    }
+
+    public PageResult userRoles(String filter, int page, int size) {
+        return page(mapper.userRoles(filter, size, page * size), page, size);
+    }
+
+    public PageResult menuPermissions(String targetType, String targetId) {
+        return page(mapper.menuPermissions(targetType, targetId), 0, 100);
+    }
+
+    public PageResult navigation() {
+        List<Map<String, Object>> leaves = mapper.menus(null).stream()
+            .filter(row -> "LEAF".equals(str(row.get("menuLevel"))) && row.get("url") != null)
+            .filter(row -> mapper.menuPermissions("ROLE", "R09").stream().anyMatch(p -> str(p.get("menuId")).equals(str(row.get("menuId"))) && Boolean.TRUE.equals(p.get("allowed"))))
+            .toList();
+        return page(leaves, 0, leaves.size());
+    }
+
+    public PageResult menus(String filter) {
+        return page(mapper.menus(filter), 0, 200);
+    }
+
+    public PageResult menuTree() {
+        return page(tree(mapper.menus(null), null), 0, 200);
+    }
+
+    public PageResult organizationTree() {
+        return page(tree(mapper.organizations(null, 500, 0), null), 0, 500);
+    }
+
+    public PageResult codeGroups(String filter) {
+        return page(mapper.codeGroups(filter), 0, 100);
+    }
+
+    public PageResult detailCodes(String groupId, String filter) {
+        return page(mapper.detailCodes(groupId, filter), 0, 100);
+    }
+
+    @Transactional
+    public Map<String, Object> updateUserUsage(String userId, UserUsageRequest request) {
+        if (request == null || request.systemEnabled() == null) throw bad("VALIDATION_ERROR", "사용여부를 입력하세요.", Map.of("systemEnabled", "required"));
+        Map<String, Object> before = mapper.byId("user_account", "user_id", userId);
+        if (before == null) throw notFound("사용자를 찾을 수 없습니다.");
+        mapper.updateUserUsage(userId, request.systemEnabled());
+        history("user_account", userId, before, mapper.byId("user_account", "user_id", userId), request.reason());
+        return firstUser(userId);
+    }
+
+    @Transactional
+    public Map<String, Object> updateBusinessRoles(String userId, BusinessRoleRequest request) {
+        if (request == null || request.roleCodes() == null || request.roleCodes().isEmpty()) throw bad("VALIDATION_ERROR", "역할을 선택하세요.", Map.of("roleCodes", "required"));
+        List<String> currentRoles = mapper.rolesForUser(userId);
+        for (String roleCode : request.roleCodes()) {
+            if (currentRoles.contains(roleCode)) continue;
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("assignmentId", "URA-" + userId + "-" + roleCode);
+            row.put("userId", userId);
+            row.put("roleCode", roleCode);
+            row.put("assignmentType", "MANUAL");
+            row.put("validFrom", LocalDate.now().toString());
+            row.put("validTo", null);
+            row.put("approverUserId", RequestContext.actor());
+            tryInsertUserRole(row);
+        }
+        history("user_role_assignment", userId, null, Map.of("roleCodes", request.roleCodes()), request.reason());
+        return firstUser(userId);
+    }
+
+    @Transactional
+    public Map<String, Object> updateOrganizationRelation(OrganizationRelationRequest request) {
+        if (request == null || blank(request.organizationCode()) || blank(request.effectiveStartDate())) throw bad("VALIDATION_ERROR", "조직코드와 적용 시작일은 필수입니다.", Map.of("organizationCode", "required", "effectiveStartDate", "required"));
+        if (!blank(request.effectiveEndDate()) && LocalDate.parse(request.effectiveEndDate()).isBefore(LocalDate.parse(request.effectiveStartDate()))) throw bad("VALIDATION_ERROR", "종료일은 시작일보다 빠를 수 없습니다.", Map.of("effectiveEndDate", "invalidPeriod"));
+        Map<String, Object> before = mapper.byId("organization", "organization_code", request.organizationCode());
+        if (before == null) throw notFound("조직을 찾을 수 없습니다.");
+        mapper.updateOrganizationRelation(request.organizationCode(), request.parentOrganizationCode(), request.effectiveStartDate(), request.effectiveEndDate());
+        Map<String, Object> after = mapper.byId("organization", "organization_code", request.organizationCode());
+        history("organization", request.organizationCode(), before, after, request.reason());
+        return mapper.organizations(request.organizationCode(), 1, 0).get(0);
+    }
+
+    @Transactional
+    public Map<String, Object> saveRole(String pathRoleCode, RoleRequest request) {
+        if (request == null || blank(request.roleCode()) || blank(request.roleName()) || blank(request.purpose())) throw bad("VALIDATION_ERROR", "역할 필수값을 입력하세요.", Map.of("roleCode", "required", "roleName", "required", "purpose", "required"));
+        if (pathRoleCode != null && !pathRoleCode.equals(request.roleCode())) throw bad("VALIDATION_ERROR", "역할코드는 변경할 수 없습니다.", Map.of("roleCode", "immutable"));
+        Map<String, Object> row = new LinkedHashMap<>();
+        row.put("roleCode", request.roleCode()); row.put("roleName", request.roleName()); row.put("purpose", request.purpose()); row.put("assignmentCriteria", request.assignmentCriteria()); row.put("defaultDataScope", request.defaultDataScope()); row.put("useYn", yn(request.useYn()));
+        upsertRole(row);
+        history("role", request.roleCode(), null, row, request.reason());
+        return mapper.roles(request.roleCode()).get(0);
+    }
+
+    @Transactional
+    public Map<String, Object> createUserRole(UserRoleAssignmentRequest request) {
+        validateUserRole(request);
+        Map<String, Object> row = userRoleRow(UUID.randomUUID().toString(), request);
+        mapper.insertUserRole(row);
+        history("user_role_assignment", str(row.get("assignmentId")), null, row, request.reason());
+        return mapper.userRoles(str(row.get("assignmentId")), 1, 0).get(0);
+    }
+
+    @Transactional
+    public Map<String, Object> updateUserRole(String assignmentId, UserRoleAssignmentRequest request) {
+        validateUserRole(request);
+        Map<String, Object> before = mapper.byId("user_role_assignment", "assignment_id", assignmentId);
+        if (before == null) throw notFound("사용자 역할을 찾을 수 없습니다.");
+        Map<String, Object> row = userRoleRow(assignmentId, request);
+        mapper.updateUserRole(row);
+        history("user_role_assignment", assignmentId, before, row, request.reason());
+        return mapper.userRoles(assignmentId, 1, 0).get(0);
+    }
+
+    @Transactional
+    public Map<String, Object> revokeUserRole(String assignmentId, RevokeRoleRequest request) {
+        Map<String, Object> before = mapper.byId("user_role_assignment", "assignment_id", assignmentId);
+        if (before == null) throw notFound("사용자 역할을 찾을 수 없습니다.");
+        if ("REVOKED".equals(str(before.get("status")))) throw new ApiException(HttpStatus.CONFLICT, "CONFLICT", "이미 회수된 역할입니다.", Map.of("assignmentId", assignmentId));
+        mapper.revokeUserRole(assignmentId);
+        Map<String, Object> after = mapper.byId("user_role_assignment", "assignment_id", assignmentId);
+        history("user_role_assignment", assignmentId, before, after, request == null ? null : request.reason());
+        return mapper.userRoles(assignmentId, 1, 0).get(0);
+    }
+
+    @Transactional
+    public PageResult saveMenuPermissions(MenuPermissionRequest request) {
+        if (request == null || !List.of("ROLE", "ORG", "USER").contains(request.targetType())) throw bad("VALIDATION_ERROR", "대상구분이 올바르지 않습니다.", Map.of("targetType", "ROLE|ORG|USER"));
+        if (blank(request.targetId()) || request.permissions() == null) throw bad("VALIDATION_ERROR", "대상과 권한 항목을 입력하세요.", Map.of("targetId", "required", "permissions", "required"));
+        for (MenuPermissionItem item : request.permissions()) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("permissionId", "PERM-" + request.targetType() + "-" + request.targetId() + "-" + item.menuId());
+            row.put("targetType", request.targetType()); row.put("targetId", request.targetId()); row.put("menuId", item.menuId()); row.put("allowed", item.allowed());
+            upsertMenuPermission(row);
+        }
+        history("menu_permission", request.targetType() + ":" + request.targetId(), null, Map.of("count", request.permissions().size()), request.reason());
+        return menuPermissions(request.targetType(), request.targetId());
+    }
+
+    @Transactional
+    public Map<String, Object> updateMenuParent(String menuId, MenuParentRequest request) {
+        if (request == null || request.displayOrder() == null) throw bad("VALIDATION_ERROR", "표시순서를 입력하세요.", Map.of("displayOrder", "required"));
+        mapper.updateMenuParent(menuId, request.parentMenuId(), request.displayOrder());
+        history("menu", menuId, null, request, request.reason());
+        return mapper.menus(menuId).stream().filter(m -> menuId.equals(str(m.get("menuId")))).findFirst().orElseThrow(() -> notFound("메뉴를 찾을 수 없습니다."));
+    }
+
+    @Transactional
+    public PageResult reorderMenus(MenuReorderRequest request) {
+        if (request == null || request.items() == null) throw bad("VALIDATION_ERROR", "정렬 항목을 입력하세요.", Map.of("items", "required"));
+        request.items().forEach(item -> mapper.updateMenuOrder(item.menuId(), item.displayOrder()));
+        history("menu", "reorder", null, request, request.reason());
+        return menus(null);
+    }
+
+    @Transactional
+    public Map<String, Object> saveMenu(String pathMenuId, MenuRequest request) {
+        if (request == null || blank(request.menuId()) || blank(request.menuName()) || request.displayOrder() == null) throw bad("VALIDATION_ERROR", "메뉴 필수값을 입력하세요.", Map.of("menuId", "required", "menuName", "required", "displayOrder", "required"));
+        if (pathMenuId != null && !pathMenuId.equals(request.menuId())) throw bad("VALIDATION_ERROR", "메뉴ID는 변경할 수 없습니다.", Map.of("menuId", "immutable"));
+        Map<String, Object> row = row("menuId", request.menuId(), "parentMenuId", request.parentMenuId(), "menuLevel", request.menuLevel(), "menuName", request.menuName(), "displayOrder", request.displayOrder(), "screenId", request.screenId(), "url", request.url(), "icon", request.icon(), "businessCategory", request.businessCategory(), "description", request.description(), "useYn", yn(request.useYn()));
+        upsertMenu(row);
+        history("menu", request.menuId(), null, row, request.reason());
+        return mapper.menus(request.menuId()).stream().filter(m -> request.menuId().equals(str(m.get("menuId")))).findFirst().orElse(row);
+    }
+
+    @Transactional
+    public Map<String, Object> saveCodeGroup(String pathGroupId, CodeGroupRequest request) {
+        if (request == null || blank(request.groupId()) || blank(request.groupName())) throw bad("VALIDATION_ERROR", "코드그룹 필수값을 입력하세요.", Map.of("groupId", "required", "groupName", "required"));
+        if (pathGroupId != null && !pathGroupId.equals(request.groupId())) throw bad("VALIDATION_ERROR", "그룹ID는 변경할 수 없습니다.", Map.of("groupId", "immutable"));
+        Map<String, Object> row = row("groupId", request.groupId(), "groupName", request.groupName(), "description", request.description(), "managementDepartment", request.managementDepartment(), "useYn", yn(request.useYn()));
+        upsertCodeGroup(row);
+        history("code_group", request.groupId(), null, row, request.reason());
+        return mapper.codeGroups(request.groupId()).get(0);
+    }
+
+    @Transactional
+    public Map<String, Object> saveDetailCode(String groupId, String pathCodeValue, DetailCodeRequest request) {
+        if (request == null || blank(request.codeValue()) || blank(request.codeName()) || request.sortOrder() == null || request.sortOrder() < 0) throw bad("VALIDATION_ERROR", "상세코드 필수값을 확인하세요.", Map.of("sortOrder", "nonNegativeRequired", "codeValue", "required", "codeName", "required"));
+        if (pathCodeValue != null && !pathCodeValue.equals(request.codeValue())) throw bad("VALIDATION_ERROR", "코드값은 변경할 수 없습니다.", Map.of("codeValue", "immutable"));
+        Map<String, Object> row = row("groupId", groupId, "codeValue", request.codeValue(), "codeName", request.codeName(), "parentCodeValue", request.parentCodeValue(), "sortOrder", request.sortOrder(), "extraAttributes", request.extraAttributes() == null ? "{}" : request.extraAttributes().toString(), "validFrom", request.validFrom(), "validTo", request.validTo(), "useYn", yn(request.useYn()));
+        upsertDetailCode(row);
+        history("detail_code", groupId + ":" + request.codeValue(), null, row, request.reason());
+        return mapper.detailCodes(groupId, request.codeValue()).get(0);
+    }
+
+    private CurrentUser currentUser(Map<String, Object> user) {
+        return new CurrentUser(str(user.get("userId")), str(user.get("loginId")), str(user.get("name")), mapper.rolesForUser(str(user.get("userId"))));
+    }
+
+    private Map<String, Object> firstUser(String userId) {
+        return normalizeUsers(mapper.users(userId, null, null, 1, 0)).get(0);
+    }
+
+    private List<Map<String, Object>> normalizeUsers(List<Map<String, Object>> users) {
+        users.forEach(row -> row.put("roleCodes", str(row.get("roleCodes")).isBlank() ? List.of() : List.of(str(row.get("roleCodes")).split(","))));
+        return users;
+    }
+
+    private void validateUserRole(UserRoleAssignmentRequest request) {
+        if (request == null || blank(request.userId()) || blank(request.roleCode()) || !List.of("POSITION_BASED", "MANUAL").contains(request.assignmentType()) || blank(request.validFrom())) throw bad("VALIDATION_ERROR", "사용자 역할 필수값을 확인하세요.", Map.of("userId", "required", "roleCode", "required", "assignmentType", "POSITION_BASED|MANUAL", "validFrom", "required"));
+    }
+
+    private Map<String, Object> userRoleRow(String assignmentId, UserRoleAssignmentRequest request) {
+        return row("assignmentId", assignmentId, "userId", request.userId(), "roleCode", request.roleCode(), "assignmentType", request.assignmentType(), "validFrom", request.validFrom(), "validTo", request.validTo(), "approverUserId", request.approverUserId());
+    }
+
+    private void tryInsertUserRole(Map<String, Object> row) {
+        try {
+            mapper.insertUserRole(row);
+        } catch (Exception ignored) {
+            mapper.updateUserRole(row);
+        }
+    }
+
+    private void upsertRole(Map<String, Object> row) {
+        if (mapper.updateRole(row) == 0) mapper.insertRole(row);
+    }
+
+    private void upsertMenuPermission(Map<String, Object> row) {
+        if (mapper.updateMenuPermission(row) == 0) mapper.insertMenuPermission(row);
+    }
+
+    private void upsertMenu(Map<String, Object> row) {
+        if (mapper.updateMenu(row) == 0) mapper.insertMenu(row);
+    }
+
+    private void upsertCodeGroup(Map<String, Object> row) {
+        if (mapper.updateCodeGroup(row) == 0) mapper.insertCodeGroup(row);
+    }
+
+    private void upsertDetailCode(Map<String, Object> row) {
+        if (mapper.updateDetailCode(row) == 0) mapper.insertDetailCode(row);
+    }
+
+    private List<Map<String, Object>> tree(List<Map<String, Object>> rows, String parent) {
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Map<String, Object> source : rows) {
+            String parentValue = source.containsKey("parentMenuId") ? str(source.get("parentMenuId")) : str(source.get("parentOrganizationCode"));
+            boolean isRoot = parent == null ? parentValue.isBlank() : parent.equals(parentValue);
+            if (isRoot) {
+                Map<String, Object> node = new LinkedHashMap<>(source);
+                String id = source.containsKey("menuId") ? str(source.get("menuId")) : str(source.get("organizationCode"));
+                node.put("children", tree(rows, id));
+                result.add(node);
+            }
+        }
+        return result;
+    }
+
+    private void history(String entity, String entityId, Object before, Object after, String reason) {
+        try {
+            mapper.history(UUID.randomUUID().toString(), entity, entityId, before == null ? null : objectMapper.writeValueAsString(before), after == null ? null : objectMapper.writeValueAsString(after), reason, RequestContext.actor());
+        } catch (JsonProcessingException e) {
+            throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "SERIALIZATION_ERROR", "변경 이력 직렬화에 실패했습니다.", Map.of());
+        }
+    }
+
+    private ApiException bad(String code, String message, Map<String, Object> meta) {
+        return new ApiException(HttpStatus.BAD_REQUEST, code, message, meta);
+    }
+
+    private ApiException notFound(String message) {
+        return new ApiException(HttpStatus.NOT_FOUND, "NOT_FOUND", message, Map.of());
+    }
+
+    private String yn(String value) {
+        return blank(value) ? "Y" : value;
+    }
+
+    private boolean blank(String value) {
+        return value == null || value.isBlank();
+    }
+
+    private String str(Object value) {
+        return value == null ? "" : String.valueOf(value);
+    }
+
+    private Map<String, Object> row(Object... values) {
+        Map<String, Object> row = new LinkedHashMap<>();
+        for (int i = 0; i < values.length; i += 2) row.put(String.valueOf(values[i]), values[i + 1]);
+        return row;
+    }
+}
