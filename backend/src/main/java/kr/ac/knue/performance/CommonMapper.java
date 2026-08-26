@@ -107,6 +107,39 @@ public interface CommonMapper {
     @UpdateProvider(type = SqlProvider.class, method = "updateDetailCode")
     int updateDetailCode(Map<String, Object> row);
 
+    @SelectProvider(type = SqlProvider.class, method = "batchDefinitions")
+    List<Map<String, Object>> batchDefinitions(@Param("filter") String filter, @Param("limit") int limit, @Param("offset") int offset);
+
+    @InsertProvider(type = SqlProvider.class, method = "insertBatchDefinition")
+    int insertBatchDefinition(Map<String, Object> row);
+
+    @UpdateProvider(type = SqlProvider.class, method = "updateBatchDefinition")
+    int updateBatchDefinition(Map<String, Object> row);
+
+    @SelectProvider(type = SqlProvider.class, method = "batchExecutions")
+    List<Map<String, Object>> batchExecutions(@Param("filter") String filter, @Param("limit") int limit, @Param("offset") int offset);
+
+    @InsertProvider(type = SqlProvider.class, method = "insertBatchExecution")
+    int insertBatchExecution(Map<String, Object> row);
+
+    @Update("UPDATE batch_execution SET execution_status='STOP_REQUESTED', reason=#{reason}, updated_at=CURRENT_TIMESTAMP WHERE execution_id=#{executionId}")
+    int stopBatchExecution(@Param("executionId") String executionId, @Param("reason") String reason);
+
+    @SelectProvider(type = SqlProvider.class, method = "batchExecutionResult")
+    Map<String, Object> batchExecutionResult(@Param("executionId") String executionId);
+
+    @InsertProvider(type = SqlProvider.class, method = "insertBatchExecutionResult")
+    int insertBatchExecutionResult(Map<String, Object> row);
+
+    @SelectProvider(type = SqlProvider.class, method = "batchReprocessTargets")
+    List<Map<String, Object>> batchReprocessTargets(@Param("filter") String filter, @Param("limit") int limit, @Param("offset") int offset);
+
+    @SelectProvider(type = SqlProvider.class, method = "batchReprocessRun")
+    Map<String, Object> batchReprocessRun(@Param("reprocessExecutionId") String reprocessExecutionId);
+
+    @InsertProvider(type = SqlProvider.class, method = "insertBatchReprocessRun")
+    int insertBatchReprocessRun(Map<String, Object> row);
+
     @Insert("INSERT INTO change_history (history_id, entity_name, entity_id, before_value, after_value, reason, actor_user_id) VALUES (#{id}, #{entity}, #{entityId}, #{beforeValue}, #{afterValue}, #{reason}, #{actor})")
     void history(@Param("id") String id, @Param("entity") String entity, @Param("entityId") String entityId, @Param("beforeValue") String beforeValue, @Param("afterValue") String afterValue, @Param("reason") String reason, @Param("actor") String actor);
 }

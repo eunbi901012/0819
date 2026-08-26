@@ -2,6 +2,7 @@ package kr.ac.knue.performance;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -268,7 +269,11 @@ class CommonFoundationApiContractTest {
 
         mockMvc.perform(get("/api/navigation/menus").cookie(new jakarta.servlet.http.Cookie("AIOPS_SESSION", session)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.data.items", hasSize(9)));
+            .andExpect(jsonPath("$.data.items", hasSize(greaterThanOrEqualTo(13))))
+            .andExpect(jsonPath("$.data.items[?(@.menuId == 'MENU-BATCH-DEF')]").exists())
+            .andExpect(jsonPath("$.data.items[?(@.menuId == 'MENU-BATCH-EXEC')]").exists())
+            .andExpect(jsonPath("$.data.items[?(@.menuId == 'MENU-BATCH-RESULT')]").exists())
+            .andExpect(jsonPath("$.data.items[?(@.menuId == 'MENU-BATCH-REPROCESS')]").exists());
 
         mockMvc.perform(get("/api/menus").cookie(new jakarta.servlet.http.Cookie("AIOPS_SESSION", session)))
             .andExpect(status().isOk())

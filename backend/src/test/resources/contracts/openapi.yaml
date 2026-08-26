@@ -33,13 +33,15 @@ x-uncovered-requirements:
   evidence: 로컬 실행 경계은 API operation이 아니라 non-functional artifact가 소유한다.
 - canonical_id: REQ-049
   status: non-functional
-  evidence: Port/Adapter 확장 경계은 API operation이 아니라 architecture-runtime artifact가 소유한다.
+  evidence: Port/Adapter 확장 경계은 API operation이 아니라 architecture-runtime artifact가
+    소유한다.
 - canonical_id: REQ-050
   status: data-constraint
   evidence: 사용자 계정 테이블은 API operation이 아니라 data-contract artifact가 소유한다.
 - canonical_id: REQ-051
   status: data-constraint
-  evidence: KORUS 교직원 Mock snapshot 테이블은 API operation이 아니라 data-contract artifact가 소유한다.
+  evidence: KORUS 교직원 Mock snapshot 테이블은 API operation이 아니라 data-contract artifact가
+    소유한다.
 - canonical_id: REQ-052
   status: data-constraint
   evidence: 조직 테이블은 API operation이 아니라 data-contract artifact가 소유한다.
@@ -79,6 +81,444 @@ x-uncovered-requirements:
 - canonical_id: REQ-067
   status: out-of-scope
   evidence: 명시적 제외 범위로 API를 생성하지 않는다.
+- canonical_id: REQ-074
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-075
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-076
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-077
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-078
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-079
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-080
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-081
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-082
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-083
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-084
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-085
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-086
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-087
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-088
+  status: out-of-scope
+  evidence: OQ 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-089
+  status: out-of-scope
+  evidence: OQ 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-090
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-091
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-092
+  status: non-functional
+  evidence: non-functional 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-093
+  status: non-functional
+  evidence: non-functional 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-097
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-098
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-099
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-100
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-101
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-102
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-103
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-104
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-105
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-106
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-107
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-108
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-109
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-110
+  status: non-functional
+  evidence: non-functional 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-111
+  status: non-functional
+  evidence: non-functional 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-112
+  status: non-functional
+  evidence: non-functional 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-113
+  status: non-functional
+  evidence: non-functional 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-114
+  status: non-functional
+  evidence: non-functional 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-115
+  status: non-functional
+  evidence: non-functional 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-116
+  status: data-constraint
+  evidence: data-contract 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-117
+  status: data-constraint
+  evidence: data-contract 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-118
+  status: data-constraint
+  evidence: data-contract 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-119
+  status: non-functional
+  evidence: non-functional 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-120
+  status: data-constraint
+  evidence: data-contract 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-121
+  status: non-functional
+  evidence: non-functional 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-122
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-123
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-124
+  status: non-functional
+  evidence: non-functional 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-125
+  status: non-functional
+  evidence: non-functional 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-126
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-127
+  status: non-functional
+  evidence: non-functional 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-128
+  status: non-functional
+  evidence: non-functional 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-129
+  status: non-functional
+  evidence: non-functional 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-130
+  status: non-functional
+  evidence: non-functional 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-131
+  status: non-functional
+  evidence: non-functional 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-132
+  status: non-functional
+  evidence: non-functional 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-133
+  status: non-functional
+  evidence: non-functional 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-134
+  status: non-functional
+  evidence: non-functional 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-135
+  status: non-functional
+  evidence: non-functional 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-136
+  status: non-functional
+  evidence: non-functional 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-137
+  status: non-functional
+  evidence: non-functional 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-138
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-139
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-140
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-141
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-142
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-143
+  status: non-functional
+  evidence: non-functional 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-161
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-162
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-163
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-164
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-165
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-168
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-169
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-170
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-171
+  status: out-of-scope
+  evidence: OQ 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-172
+  status: out-of-scope
+  evidence: OQ 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-173
+  status: out-of-scope
+  evidence: OQ 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-177
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-178
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-179
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-180
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-181
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-182
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-201
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-202
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-203
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-204
+  status: out-of-scope
+  evidence: OQ 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-214
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-215
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-216
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-217
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-218
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-219
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-237
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-238
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-239
+  status: out-of-scope
+  evidence: OQ 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-240
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-245
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-246
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-251
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-252
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-253
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-254
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-255
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-256
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-270
+  status: out-of-scope
+  evidence: OQ 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-271
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-272
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-285
+  status: out-of-scope
+  evidence: OQ 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-286
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-287
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-288
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-289
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-290
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-291
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-292
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-293
+  status: data-constraint
+  evidence: data-contract 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-294
+  status: data-constraint
+  evidence: data-contract 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-295
+  status: data-constraint
+  evidence: data-contract 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-296
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-297
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-298
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-299
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-300
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-301
+  status: non-functional
+  evidence: non-functional 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-302
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-303
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-304
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-305
+  status: non-functional
+  evidence: non-functional 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-306
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-307
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-308
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-309
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-310
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-311
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-312
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-313
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-314
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-315
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-316
+  status: out-of-scope
+  evidence: OQ 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-317
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-318
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-319
+  status: out-of-scope
+  evidence: out-of-scope 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-320
+  status: covered
+  evidence: ui-primary 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-321
+  status: non-functional
+  evidence: non-functional 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
 paths:
   /api/health:
     get:
@@ -2327,6 +2767,582 @@ paths:
                   properties:
                     error:
                       $ref: '#/components/schemas/ApiError'
+  /api/batch-definitions:
+    get:
+      operationId: listBatchDefinitions
+      summary: 배치 정의 목록
+      security:
+      - SessionCookieAuth: []
+      x-roles:
+      - R09
+      x-related-requirements:
+      - REQ-144
+      - REQ-152
+      - REQ-153
+      - REQ-154
+      - REQ-155
+      - REQ-156
+      - REQ-157
+      - REQ-158
+      - REQ-159
+      - REQ-160
+      parameters:
+      - $ref: '#/components/parameters/PageParam'
+      - $ref: '#/components/parameters/SizeParam'
+      - name: filter
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: 요청 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: 요청 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+    post:
+      operationId: createBatchDefinition
+      summary: 배치 정의 등록
+      security:
+      - SessionCookieAuth: []
+      x-roles:
+      - R09
+      x-related-requirements:
+      - REQ-145
+      - REQ-146
+      - REQ-147
+      - REQ-148
+      - REQ-149
+      - REQ-150
+      - REQ-151
+      - REQ-166
+      - REQ-167
+      x-business-rules:
+      - 배치 정의 등록은 R09 운영 권한과 사유/필수값 검증을 통과해야 한다
+      - 배치 정의 등록은 원천 평가·연계 업무자료를 임의 변경하지 않는다
+      x-side-effects:
+      - 배치 정의 등록 결과를 batch 관련 table에 저장한다
+      - requestId와 운영자/사유를 change_history 또는 batch history에 남긴다
+      x-state-transitions:
+      - 배치 정의 등록 성공 시 source-backed 실행상태 또는 결과상태로 전이된다
+      x-required-tests:
+      - 'happy: 유효한 R09 요청 -> BatchDefinitionRequest 저장 후 follow-up GET에서 확인된다'
+      - 'auth: R01 세션 요청 -> 403 ApiError와 batch table 무변경'
+      - 'validation: reason 누락 또는 필수 ID 누락 -> ApiError.meta.fieldErrors에 필드 오류'
+      - 'business: 실패 대상/정의 경계 위반 -> 기존 batch_execution 상태 유지'
+      - 'side-effect: 성공 요청 -> change_history 또는 batch history row에 requestId/operator/reason
+        존재'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchDefinitionRequest'
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: 요청 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: 요청 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /api/batch-definitions/{batchId}:
+    patch:
+      operationId: updateBatchDefinition
+      summary: 배치 정의 수정
+      security:
+      - SessionCookieAuth: []
+      x-roles:
+      - R09
+      x-related-requirements:
+      - REQ-145
+      - REQ-146
+      - REQ-147
+      - REQ-148
+      - REQ-149
+      - REQ-150
+      - REQ-151
+      - REQ-166
+      - REQ-167
+      x-business-rules:
+      - 배치 정의 수정은 R09 운영 권한과 사유/필수값 검증을 통과해야 한다
+      - 배치 정의 수정은 원천 평가·연계 업무자료를 임의 변경하지 않는다
+      x-side-effects:
+      - 배치 정의 수정 결과를 batch 관련 table에 저장한다
+      - requestId와 운영자/사유를 change_history 또는 batch history에 남긴다
+      x-state-transitions:
+      - 배치 정의 수정 성공 시 source-backed 실행상태 또는 결과상태로 전이된다
+      x-required-tests:
+      - 'happy: 유효한 R09 요청 -> BatchDefinitionRequest 저장 후 follow-up GET에서 확인된다'
+      - 'auth: R01 세션 요청 -> 403 ApiError와 batch table 무변경'
+      - 'validation: reason 누락 또는 필수 ID 누락 -> ApiError.meta.fieldErrors에 필드 오류'
+      - 'business: 실패 대상/정의 경계 위반 -> 기존 batch_execution 상태 유지'
+      - 'side-effect: 성공 요청 -> change_history 또는 batch history row에 requestId/operator/reason
+        존재'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchDefinitionRequest'
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: 요청 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: 요청 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /api/batch-executions:
+    get:
+      operationId: listBatchExecutions
+      summary: 배치 실행 상태
+      security:
+      - SessionCookieAuth: []
+      x-roles:
+      - R09
+      x-related-requirements:
+      - REQ-183
+      - REQ-190
+      - REQ-191
+      - REQ-192
+      - REQ-193
+      - REQ-194
+      - REQ-195
+      - REQ-196
+      - REQ-205
+      parameters:
+      - $ref: '#/components/parameters/PageParam'
+      - $ref: '#/components/parameters/SizeParam'
+      - name: filter
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: 요청 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: 요청 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /api/batch-executions/manual-runs:
+    post:
+      operationId: createBatchManualRun
+      summary: 배치 수동실행
+      security:
+      - SessionCookieAuth: []
+      x-roles:
+      - R09
+      x-related-requirements:
+      - REQ-184
+      - REQ-187
+      - REQ-188
+      - REQ-189
+      - REQ-197
+      - REQ-200
+      - REQ-206
+      - REQ-207
+      x-business-rules:
+      - 배치 수동실행은 R09 운영 권한과 사유/필수값 검증을 통과해야 한다
+      - 배치 수동실행은 원천 평가·연계 업무자료를 임의 변경하지 않는다
+      x-side-effects:
+      - 배치 수동실행 결과를 batch 관련 table에 저장한다
+      - requestId와 운영자/사유를 change_history 또는 batch history에 남긴다
+      x-state-transitions:
+      - 배치 수동실행 성공 시 source-backed 실행상태 또는 결과상태로 전이된다
+      x-required-tests:
+      - 'happy: 유효한 R09 요청 -> BatchManualRunRequest 저장 후 follow-up GET에서 확인된다'
+      - 'auth: R01 세션 요청 -> 403 ApiError와 batch table 무변경'
+      - 'validation: reason 누락 또는 필수 ID 누락 -> ApiError.meta.fieldErrors에 필드 오류'
+      - 'business: 실패 대상/정의 경계 위반 -> 기존 batch_execution 상태 유지'
+      - 'side-effect: 성공 요청 -> change_history 또는 batch history row에 requestId/operator/reason
+        존재'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchManualRunRequest'
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: 요청 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: 요청 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /api/batch-executions/{executionId}/stop:
+    patch:
+      operationId: updateBatchExecutionStop
+      summary: 배치 중지
+      security:
+      - SessionCookieAuth: []
+      x-roles:
+      - R09
+      x-related-requirements:
+      - REQ-185
+      - REQ-187
+      - REQ-188
+      - REQ-189
+      - REQ-198
+      - REQ-200
+      - REQ-208
+      x-business-rules:
+      - 배치 중지은 R09 운영 권한과 사유/필수값 검증을 통과해야 한다
+      - 배치 중지은 원천 평가·연계 업무자료를 임의 변경하지 않는다
+      x-side-effects:
+      - 배치 중지 결과를 batch 관련 table에 저장한다
+      - requestId와 운영자/사유를 change_history 또는 batch history에 남긴다
+      x-state-transitions:
+      - 배치 중지 성공 시 source-backed 실행상태 또는 결과상태로 전이된다
+      x-required-tests:
+      - 'happy: 유효한 R09 요청 -> BatchStopRequest 저장 후 follow-up GET에서 확인된다'
+      - 'auth: R01 세션 요청 -> 403 ApiError와 batch table 무변경'
+      - 'validation: reason 누락 또는 필수 ID 누락 -> ApiError.meta.fieldErrors에 필드 오류'
+      - 'business: 실패 대상/정의 경계 위반 -> 기존 batch_execution 상태 유지'
+      - 'side-effect: 성공 요청 -> change_history 또는 batch history row에 requestId/operator/reason
+        존재'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchStopRequest'
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: 요청 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: 요청 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /api/batch-executions/{executionId}/reruns:
+    post:
+      operationId: createBatchExecutionRerun
+      summary: 배치 재실행
+      security:
+      - SessionCookieAuth: []
+      x-roles:
+      - R09
+      x-related-requirements:
+      - REQ-186
+      - REQ-187
+      - REQ-188
+      - REQ-189
+      - REQ-199
+      - REQ-200
+      - REQ-209
+      x-business-rules:
+      - 배치 재실행은 R09 운영 권한과 사유/필수값 검증을 통과해야 한다
+      - 배치 재실행은 원천 평가·연계 업무자료를 임의 변경하지 않는다
+      x-side-effects:
+      - 배치 재실행 결과를 batch 관련 table에 저장한다
+      - requestId와 운영자/사유를 change_history 또는 batch history에 남긴다
+      x-state-transitions:
+      - 배치 재실행 성공 시 source-backed 실행상태 또는 결과상태로 전이된다
+      x-required-tests:
+      - 'happy: 유효한 R09 요청 -> BatchRerunRequest 저장 후 follow-up GET에서 확인된다'
+      - 'auth: R01 세션 요청 -> 403 ApiError와 batch table 무변경'
+      - 'validation: reason 누락 또는 필수 ID 누락 -> ApiError.meta.fieldErrors에 필드 오류'
+      - 'business: 실패 대상/정의 경계 위반 -> 기존 batch_execution 상태 유지'
+      - 'side-effect: 성공 요청 -> change_history 또는 batch history row에 requestId/operator/reason
+        존재'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchRerunRequest'
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: 요청 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: 요청 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /api/batch-results/{executionId}:
+    get:
+      operationId: getBatchExecutionResult
+      summary: 배치 결과 조회
+      security:
+      - SessionCookieAuth: []
+      x-roles:
+      - R09
+      x-related-requirements:
+      - REQ-220
+      - REQ-221
+      - REQ-222
+      - REQ-223
+      - REQ-224
+      - REQ-225
+      - REQ-226
+      - REQ-227
+      - REQ-228
+      - REQ-229
+      - REQ-230
+      - REQ-231
+      - REQ-232
+      - REQ-233
+      - REQ-234
+      - REQ-235
+      - REQ-236
+      - REQ-241
+      - REQ-242
+      - REQ-243
+      - REQ-244
+      parameters:
+      - $ref: '#/components/parameters/PageParam'
+      - $ref: '#/components/parameters/SizeParam'
+      - name: filter
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: 요청 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: 요청 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /api/batch-reprocess-targets:
+    get:
+      operationId: listBatchReprocessTargets
+      summary: 재처리 대상 조회
+      security:
+      - SessionCookieAuth: []
+      x-roles:
+      - R09
+      x-related-requirements:
+      - REQ-257
+      - REQ-258
+      - REQ-264
+      - REQ-268
+      - REQ-277
+      - REQ-278
+      parameters:
+      - $ref: '#/components/parameters/PageParam'
+      - $ref: '#/components/parameters/SizeParam'
+      - name: filter
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: 요청 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: 요청 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /api/batch-reprocess-runs:
+    post:
+      operationId: createBatchReprocessRun
+      summary: 배치 오류 재처리
+      security:
+      - SessionCookieAuth: []
+      x-roles:
+      - R09
+      x-related-requirements:
+      - REQ-259
+      - REQ-260
+      - REQ-262
+      - REQ-263
+      - REQ-265
+      - REQ-266
+      - REQ-268
+      - REQ-269
+      - REQ-273
+      - REQ-274
+      - REQ-275
+      - REQ-276
+      - REQ-284
+      x-business-rules:
+      - 배치 오류 재처리은 R09 운영 권한과 사유/필수값 검증을 통과해야 한다
+      - 배치 오류 재처리은 원천 평가·연계 업무자료를 임의 변경하지 않는다
+      x-side-effects:
+      - 배치 오류 재처리 결과를 batch 관련 table에 저장한다
+      - requestId와 운영자/사유를 change_history 또는 batch history에 남긴다
+      x-state-transitions:
+      - 배치 오류 재처리 성공 시 source-backed 실행상태 또는 결과상태로 전이된다
+      x-required-tests:
+      - 'happy: 유효한 R09 요청 -> BatchReprocessRunRequest 저장 후 follow-up GET에서 확인된다'
+      - 'auth: R01 세션 요청 -> 403 ApiError와 batch table 무변경'
+      - 'validation: reason 누락 또는 필수 ID 누락 -> ApiError.meta.fieldErrors에 필드 오류'
+      - 'business: 실패 대상/정의 경계 위반 -> 기존 batch_execution 상태 유지'
+      - 'side-effect: 성공 요청 -> change_history 또는 batch history row에 requestId/operator/reason
+        존재'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchReprocessRunRequest'
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: 요청 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: 요청 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /api/batch-reprocess-runs/{reprocessExecutionId}:
+    get:
+      operationId: getBatchReprocessRun
+      summary: 재처리 결과 조회
+      security:
+      - SessionCookieAuth: []
+      x-roles:
+      - R09
+      x-related-requirements:
+      - REQ-261
+      - REQ-267
+      - REQ-275
+      - REQ-279
+      parameters:
+      - $ref: '#/components/parameters/PageParam'
+      - $ref: '#/components/parameters/SizeParam'
+      - name: filter
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: 요청 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: 요청 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
 components:
   securitySchemes:
     SessionCookieAuth:
@@ -2816,3 +3832,33 @@ components:
           $ref: '#/components/schemas/UseYn'
         reason:
           type: string
+    BatchDefinition:
+      type: object
+      additionalProperties: true
+    BatchDefinitionRequest:
+      type: object
+      additionalProperties: true
+    BatchExecution:
+      type: object
+      additionalProperties: true
+    BatchManualRunRequest:
+      type: object
+      additionalProperties: true
+    BatchStopRequest:
+      type: object
+      additionalProperties: true
+    BatchRerunRequest:
+      type: object
+      additionalProperties: true
+    BatchExecutionResult:
+      type: object
+      additionalProperties: true
+    BatchReprocessTarget:
+      type: object
+      additionalProperties: true
+    BatchReprocessRun:
+      type: object
+      additionalProperties: true
+    BatchReprocessRunRequest:
+      type: object
+      additionalProperties: true

@@ -3,6 +3,7 @@ import {
   fireEvent,
   render,
   screen,
+  within,
   waitFor,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -75,6 +76,26 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL) => {
               menuName: "상세코드 관리",
               url: "/admin/code-groups/COMMON_YN/codes",
             },
+            {
+              menuId: "MENU-BATCH-DEF",
+              menuName: "배치 정의 관리",
+              url: "/admin/batch-definitions",
+            },
+            {
+              menuId: "MENU-BATCH-EXEC",
+              menuName: "배치 실행 관리",
+              url: "/admin/batch-executions",
+            },
+            {
+              menuId: "MENU-BATCH-RESULT",
+              menuName: "배치 결과 조회",
+              url: "/admin/batch-results",
+            },
+            {
+              menuId: "MENU-BATCH-REPROCESS",
+              menuName: "배치 오류 재처리",
+              url: "/admin/batch-reprocess",
+            },
           ],
         },
       }),
@@ -112,6 +133,82 @@ const mockFetch = vi.fn(async (input: RequestInfo | URL) => {
               description: "Y/N 공통코드",
               managementDepartment: "SYSTEM",
               useYn: "Y",
+            },
+          ],
+        },
+      }),
+      { status: 200 },
+    );
+  }
+  if (url.includes("/api/batch-results/EXEC-SEED-FAILED")) {
+    return new Response(
+      JSON.stringify({
+        success: true,
+        data: {
+          executionId: "EXEC-SEED-FAILED",
+          batchId: "BATCH-EVAL-DATA",
+          executionStatus: "FAILED",
+          processedCount: 20,
+          successCount: 18,
+          failureCount: 2,
+          excludedCount: 0,
+          elapsedSeconds: 300,
+          logFilePath: "/var/log/batch/EXEC-SEED-FAILED.log",
+        },
+      }),
+      { status: 200 },
+    );
+  }
+  if (url.includes("/api/batch-executions")) {
+    return new Response(
+      JSON.stringify({
+        success: true,
+        data: {
+          items: [
+            {
+              executionId: "EXEC-SEED-FAILED",
+              batchId: "BATCH-EVAL-DATA",
+              operationType: "MANUAL_RUN",
+              executionStatus: "FAILED",
+            },
+          ],
+        },
+      }),
+      { status: 200 },
+    );
+  }
+  if (url.includes("/api/batch-definitions")) {
+    return new Response(
+      JSON.stringify({
+        success: true,
+        data: {
+          items: [
+            {
+              batchId: "BATCH-EVAL-DATA",
+              batchType: "EVALUATION_DATA",
+              scheduleCycle: "DAILY 02:00",
+              maxExecutionSeconds: 3600,
+              ownerUserId: "U-ADMIN",
+              useYn: "Y",
+            },
+          ],
+        },
+      }),
+      { status: 200 },
+    );
+  }
+  if (url.includes("/api/batch-reprocess-targets")) {
+    return new Response(
+      JSON.stringify({
+        success: true,
+        data: {
+          items: [
+            {
+              targetId: "RPT-EXEC-SEED-FAILED",
+              originalExecutionId: "EXEC-SEED-FAILED",
+              targetType: "EXECUTION",
+              failureReference: "EXEC-SEED-FAILED",
+              failureStatus: "FAILED",
             },
           ],
         },
@@ -193,6 +290,70 @@ describe("교수업적평가시스템 UI contract", () => {
         expect.objectContaining({
           method: "PATCH",
           body: expect.not.stringContaining("groupId"),
+        }),
+      ),
+    );
+  });
+
+  it("renders batch management routes and loads batch result detail by selected execution", async () => {
+    window.history.pushState({}, "", "/admin/batch-results");
+    render(<App />);
+
+    expect(await screen.findByText("배치 결과 조회")).toBeInTheDocument();
+    const resultTable = await screen.findByRole("table");
+    fireEvent.click(within(resultTable).getByText("EXEC-SEED-FAILED"));
+
+    await waitFor(() =>
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/batch-results/EXEC-SEED-FAILED",
+        expect.anything(),
+      ),
+    );
+    expect(await screen.findByDisplayValue("300")).toBeInTheDocument();
+  });
+
+  it("serializes batch definition JSON parameters and required save reason", async () => {
+    window.history.pushState({}, "", "/admin/batch-definitions");
+    render(<App />);
+
+    expect(await screen.findByText("배치 정의 관리")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "신규 등록" }));
+    const detailForm = screen
+      .getByRole("heading", { name: "등록" })
+      .closest("section");
+    expect(detailForm).not.toBeNull();
+    const detail = within(detailForm as HTMLElement);
+    fireEvent.change(detail.getByLabelText(/^배치ID/), {
+      target: { value: "BATCH-NEW" },
+    });
+    fireEvent.change(detail.getByLabelText(/배치 업무유형/), {
+      target: { value: "EVALUATION_DATA" },
+    });
+    fireEvent.change(detail.getByLabelText(/실행주기/), {
+      target: { value: "DAILY 05:00" },
+    });
+    fireEvent.change(detail.getByLabelText(/실행 파라미터 JSON/), {
+      target: { value: '{"year":"2026"}' },
+    });
+    fireEvent.change(detail.getByLabelText(/최대실행시간/), {
+      target: { value: "900" },
+    });
+    fireEvent.change(detail.getByLabelText(/담당자ID/), {
+      target: { value: "U-ADMIN" },
+    });
+    fireEvent.change(detail.getByLabelText(/변경 사유/), {
+      target: { value: "등록" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "저장" }));
+
+    await waitFor(() =>
+      expect(mockFetch).toHaveBeenCalledWith(
+        "/api/batch-definitions",
+        expect.objectContaining({
+          method: "POST",
+          body: expect.stringContaining(
+            '"executionParameters":{"year":"2026"}',
+          ),
         }),
       ),
     );

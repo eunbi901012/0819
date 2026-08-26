@@ -185,4 +185,59 @@ public class CommonController {
         return ApiResponse.ok(service.saveDetailCode(groupId, codeValue, request));
     }
 
+    @GetMapping("/api/batch-definitions")
+    ApiResponse<PageResult> batchDefinitions(@RequestParam(required = false) String filter, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.batchDefinitions(filter, page, size));
+    }
+
+    @PostMapping("/api/batch-definitions")
+    ApiResponse<Map<String, Object>> createBatchDefinition(@RequestBody BatchDefinitionRequest request) {
+        return ApiResponse.ok(service.saveBatchDefinition(null, request));
+    }
+
+    @PatchMapping("/api/batch-definitions/{batchId}")
+    ApiResponse<Map<String, Object>> updateBatchDefinition(@PathVariable String batchId, @RequestBody BatchDefinitionRequest request) {
+        return ApiResponse.ok(service.saveBatchDefinition(batchId, request));
+    }
+
+    @GetMapping("/api/batch-executions")
+    ApiResponse<PageResult> batchExecutions(@RequestParam(required = false) String filter, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.batchExecutions(filter, page, size));
+    }
+
+    @PostMapping("/api/batch-executions/manual-runs")
+    ApiResponse<Map<String, Object>> createBatchManualRun(@RequestBody BatchManualRunRequest request) {
+        return ApiResponse.ok(service.createBatchManualRun(request));
+    }
+
+    @PatchMapping("/api/batch-executions/{executionId}/stop")
+    ApiResponse<Map<String, Object>> updateBatchExecutionStop(@PathVariable String executionId, @RequestBody BatchStopRequest request) {
+        return ApiResponse.ok(service.stopBatchExecution(executionId, request));
+    }
+
+    @PostMapping("/api/batch-executions/{executionId}/reruns")
+    ApiResponse<Map<String, Object>> createBatchExecutionRerun(@PathVariable String executionId, @RequestBody BatchRerunRequest request) {
+        return ApiResponse.ok(service.rerunBatchExecution(executionId, request));
+    }
+
+    @GetMapping("/api/batch-results/{executionId}")
+    ApiResponse<Map<String, Object>> batchExecutionResult(@PathVariable String executionId) {
+        return ApiResponse.ok(service.batchExecutionResult(executionId));
+    }
+
+    @GetMapping("/api/batch-reprocess-targets")
+    ApiResponse<PageResult> batchReprocessTargets(@RequestParam(required = false) String filter, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.batchReprocessTargets(filter, page, size));
+    }
+
+    @PostMapping("/api/batch-reprocess-runs")
+    ApiResponse<Map<String, Object>> createBatchReprocessRun(@RequestBody BatchReprocessRunRequest request) {
+        return ApiResponse.ok(service.createBatchReprocessRun(request));
+    }
+
+    @GetMapping("/api/batch-reprocess-runs/{reprocessExecutionId}")
+    ApiResponse<Map<String, Object>> batchReprocessRun(@PathVariable String reprocessExecutionId) {
+        return ApiResponse.ok(service.batchReprocessRun(reprocessExecutionId));
+    }
+
 }

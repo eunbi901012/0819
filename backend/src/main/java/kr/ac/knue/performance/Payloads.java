@@ -57,3 +57,18 @@ record CodeGroupRequest(String groupId, String groupName, String description, St
 
 record DetailCodeRequest(String codeValue, String codeName, String parentCodeValue, Integer sortOrder, JsonNode extraAttributes, String validFrom, String validTo, String useYn, String reason) {
 }
+
+record BatchDefinitionRequest(String batchId, String batchType, String scheduleCycle, String predecessorBatchId, String successorBatchId, JsonNode executionParameters, Integer maxExecutionSeconds, String ownerUserId, String useYn, String reason) {
+}
+
+record BatchManualRunRequest(String batchId, JsonNode executionParameters, String reason) {
+}
+
+record BatchStopRequest(String reason) {
+}
+
+record BatchRerunRequest(JsonNode executionParameters, String reason) {
+}
+
+record BatchReprocessRunRequest(String originalExecutionId, String targetId, String reason) {
+}

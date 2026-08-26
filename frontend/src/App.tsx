@@ -65,6 +65,10 @@ const fallbackMenuLinks = [
   ["메뉴 관리", "/admin/menu-info", "메뉴 정보 관리"],
   ["공통코드 관리", "/admin/code-groups", "코드그룹 관리"],
   ["공통코드 관리", "/admin/code-groups/COMMON_YN/codes", "상세코드 관리"],
+  ["배치작업 관리", "/admin/batch-definitions", "배치 정의 관리"],
+  ["배치작업 관리", "/admin/batch-executions", "배치 실행 관리"],
+  ["배치작업 관리", "/admin/batch-results", "배치 결과 조회"],
+  ["배치작업 관리", "/admin/batch-reprocess", "배치 오류 재처리"],
 ];
 
 const roleOptions = [
@@ -474,6 +478,143 @@ const screens: ScreenConfig[] = [
       { key: "useYn", label: "사용여부", tone: "status" },
     ],
   },
+  {
+    route: "/admin/batch-definitions",
+    title: "배치 정의 관리",
+    eyebrow: "Batch Definition",
+    description:
+      "배치ID, 업무유형, 실행주기, 선후행, 파라미터, 최대실행시간과 담당자를 관리합니다.",
+    menuPath: "시스템 운영 관리 > 배치작업 관리 > 배치 정의 관리",
+    listPath: () => "/api/batch-definitions",
+    empty: "배치 정의 없음",
+    archetype: "search-list-detail",
+    idKey: "batchId",
+    createPath: () => "/api/batch-definitions",
+    updatePath: (row) =>
+      `/api/batch-definitions/${encodeURIComponent(text(row.batchId))}`,
+    updateMethod: "PATCH",
+    filters: [{ key: "filter", label: "배치ID·업무유형·담당자" }],
+    fields: [
+      { key: "batchId", label: "배치ID", createReadonly: true, required: true },
+      { key: "batchType", label: "배치 업무유형", required: true },
+      { key: "scheduleCycle", label: "실행주기", required: true },
+      { key: "predecessorBatchId", label: "선행 배치ID" },
+      { key: "successorBatchId", label: "후행 배치ID" },
+      { key: "executionParameters", label: "실행 파라미터 JSON", type: "json" },
+      {
+        key: "maxExecutionSeconds",
+        label: "최대실행시간(초)",
+        type: "number",
+        required: true,
+      },
+      { key: "ownerUserId", label: "담당자ID", required: true },
+      { key: "useYn", label: "사용여부", type: "yn" },
+      { key: "reason", label: "변경 사유", type: "textarea", required: true },
+    ],
+    columns: [
+      { key: "batchId", label: "배치ID", tone: "mono" },
+      { key: "batchType", label: "업무유형", tone: "status" },
+      { key: "scheduleCycle", label: "실행주기" },
+      { key: "predecessorBatchId", label: "선행" },
+      { key: "successorBatchId", label: "후행" },
+      { key: "maxExecutionSeconds", label: "최대시간" },
+      { key: "ownerUserId", label: "담당자", tone: "mono" },
+      { key: "useYn", label: "사용여부", tone: "status" },
+    ],
+  },
+  {
+    route: "/admin/batch-executions",
+    title: "배치 실행 관리",
+    eyebrow: "Batch Execution",
+    description: "배치 수동실행, 중지, 재실행 요청과 실행상태를 기록합니다.",
+    menuPath: "시스템 운영 관리 > 배치작업 관리 > 배치 실행 관리",
+    listPath: () => "/api/batch-executions",
+    empty: "배치 실행 이력 없음",
+    archetype: "effective-period",
+    idKey: "executionId",
+    createPath: () => "/api/batch-executions/manual-runs",
+    filters: [{ key: "filter", label: "실행ID·배치ID·상태" }],
+    fields: [
+      { key: "executionId", label: "실행ID", readonly: true },
+      { key: "batchId", label: "배치ID", required: true },
+      { key: "operationType", label: "처리유형", readonly: true },
+      { key: "executionParameters", label: "실행 파라미터 JSON", type: "json" },
+      { key: "executionStatus", label: "실행상태", readonly: true },
+      { key: "originalExecutionId", label: "원실행ID", readonly: true },
+      { key: "reason", label: "처리 사유", type: "textarea", required: true },
+    ],
+    columns: [
+      { key: "executionId", label: "실행ID", tone: "mono" },
+      { key: "batchId", label: "배치ID", tone: "mono" },
+      { key: "operationType", label: "처리유형", tone: "status" },
+      { key: "executionStatus", label: "실행상태", tone: "status" },
+      { key: "originalExecutionId", label: "원실행ID", tone: "mono" },
+      { key: "createdAt", label: "요청일시" },
+    ],
+  },
+  {
+    route: "/admin/batch-results",
+    title: "배치 결과 조회",
+    eyebrow: "Batch Result",
+    description: "배치 실행ID별 결과와 로그 참조를 조회합니다.",
+    menuPath: "시스템 운영 관리 > 배치작업 관리 > 배치 결과 조회",
+    listPath: () => "/api/batch-executions",
+    empty: "배치 결과 없음",
+    archetype: "search-list-detail",
+    idKey: "executionId",
+    filters: [{ key: "filter", label: "실행ID·배치ID·상태" }],
+    fields: [
+      { key: "executionId", label: "실행ID", readonly: true },
+      { key: "batchId", label: "배치ID", readonly: true },
+      { key: "executionStatus", label: "실행상태", readonly: true },
+      { key: "processedCount", label: "처리건수", readonly: true },
+      { key: "successCount", label: "성공건수", readonly: true },
+      { key: "failureCount", label: "실패건수", readonly: true },
+      { key: "excludedCount", label: "제외건수", readonly: true },
+      { key: "elapsedSeconds", label: "소요시간(초)", readonly: true },
+      { key: "logFilePath", label: "로그파일", readonly: true },
+    ],
+    columns: [
+      { key: "executionId", label: "실행ID", tone: "mono" },
+      { key: "batchId", label: "배치ID", tone: "mono" },
+      { key: "executionStatus", label: "상태", tone: "status" },
+      { key: "createdAt", label: "요청일시" },
+    ],
+  },
+  {
+    route: "/admin/batch-reprocess",
+    title: "배치 오류 재처리",
+    eyebrow: "Batch Reprocess",
+    description:
+      "실패 대상만 선택하여 원실행과 연결된 재처리 실행을 기록합니다.",
+    menuPath: "시스템 운영 관리 > 배치작업 관리 > 배치 오류 재처리",
+    listPath: () => "/api/batch-reprocess-targets",
+    empty: "재처리 대상 없음",
+    archetype: "effective-period",
+    idKey: "targetId",
+    createPath: () => "/api/batch-reprocess-runs",
+    filters: [{ key: "filter", label: "대상ID·원실행ID·실패상태" }],
+    fields: [
+      { key: "targetId", label: "재처리 대상", readonly: true, required: true },
+      {
+        key: "originalExecutionId",
+        label: "원실행ID",
+        readonly: true,
+        required: true,
+      },
+      { key: "targetType", label: "대상유형", readonly: true },
+      { key: "failureReference", label: "실패 참조", readonly: true },
+      { key: "failureStatus", label: "실패상태", readonly: true },
+      { key: "reason", label: "재처리 사유", type: "textarea", required: true },
+    ],
+    columns: [
+      { key: "targetId", label: "대상ID", tone: "mono" },
+      { key: "originalExecutionId", label: "원실행ID", tone: "mono" },
+      { key: "targetType", label: "대상유형", tone: "status" },
+      { key: "failureReference", label: "실패 참조" },
+      { key: "failureStatus", label: "실패상태", tone: "status" },
+    ],
+  },
 ];
 
 function currentRoute() {
@@ -819,12 +960,55 @@ function ManagementScreen({
     }
   }
 
+  async function requestBatchOperation(kind: "stop" | "rerun") {
+    if (!selected.executionId) return;
+    const label = kind === "stop" ? "중지" : "재실행";
+    if (!window.confirm(`선택한 배치 실행을 ${label}하시겠습니까?`)) return;
+    try {
+      await api(
+        kind === "stop"
+          ? `/api/batch-executions/${encodeURIComponent(text(selected.executionId))}/stop`
+          : `/api/batch-executions/${encodeURIComponent(text(selected.executionId))}/reruns`,
+        {
+          method: kind === "stop" ? "PATCH" : "POST",
+          body: JSON.stringify({
+            executionParameters: parseJson(text(selected.executionParameters)),
+            reason: selected.reason,
+          }),
+        },
+      );
+      setMessage(`${label} 요청 완료 · 목록을 재조회했습니다.`);
+      await load(filters, selected);
+    } catch (err) {
+      setError(errorMessage(err, `${label} 요청 오류`));
+      setFieldErrors(errorFields(err));
+    }
+  }
+
   function resetForm() {
     setSelected(original);
     setCreating(false);
     setFieldErrors({});
     setError("");
     setMessage("선택/입력 값을 마지막 조회 상태로 복원했습니다.");
+  }
+
+  async function selectRow(row: Row) {
+    setSelected(row);
+    setOriginal(row);
+    setCreating(false);
+    if (config.title !== "배치 결과 조회" || !row.executionId) return;
+    try {
+      const detail = await api<Row>(
+        `/api/batch-results/${encodeURIComponent(text(row.executionId))}`,
+      );
+      setSelected(detail);
+      setOriginal(detail);
+      setMessage("배치 결과 상세 조회 완료");
+    } catch (err) {
+      setError(errorMessage(err, "배치 결과 조회 오류"));
+      setFieldErrors(errorFields(err));
+    }
   }
 
   function startCreate() {
@@ -954,11 +1138,7 @@ function ManagementScreen({
               config={config}
               rows={rows}
               selected={selected}
-              onSelect={(row) => {
-                setSelected(row);
-                setOriginal(row);
-                setCreating(false);
-              }}
+              onSelect={(row) => void selectRow(row)}
               onNavigate={setRoute}
               onPatchRow={(index, key, value) =>
                 setRows((prev) =>
@@ -1018,16 +1198,33 @@ function ManagementScreen({
                   순서 재정렬 저장
                 </button>
               </>
-            ) : (
+            ) : config.createPath || config.updatePath ? (
               <button className="primary" onClick={() => save()}>
                 저장
               </button>
-            )}
+            ) : null}
             {config.title === "사용자 역할 관리" &&
               Boolean(selected.assignmentId) && (
                 <button className="danger" onClick={revoke}>
                   회수
                 </button>
+              )}
+            {config.title === "배치 실행 관리" &&
+              Boolean(selected.executionId) && (
+                <>
+                  <button
+                    className="secondary"
+                    onClick={() => void requestBatchOperation("rerun")}
+                  >
+                    재실행
+                  </button>
+                  <button
+                    className="danger"
+                    onClick={() => void requestBatchOperation("stop")}
+                  >
+                    중지
+                  </button>
+                </>
               )}
             <button className="secondary" onClick={resetForm}>
               취소
@@ -1352,6 +1549,7 @@ function menuGroup(path: string) {
     return "사용자·조직 관리";
   if (path.includes("roles") || path.includes("permissions"))
     return "역할·권한 관리";
+  if (path.includes("batch")) return "배치작업 관리";
   if (path.includes("menu")) return "메뉴 관리";
   return "공통코드 관리";
 }
@@ -1434,6 +1632,16 @@ function validate(config: ScreenConfig, row: Row, creating: boolean) {
       JSON.parse(text(row.extraAttributes));
     } catch {
       errors.extraAttributes = "JSON 형식이어야 합니다.";
+    }
+  }
+  if (
+    ["배치 정의 관리", "배치 실행 관리"].includes(config.title) &&
+    text(row.executionParameters).trim()
+  ) {
+    try {
+      JSON.parse(text(row.executionParameters));
+    } catch {
+      errors.executionParameters = "JSON 형식이어야 합니다.";
     }
   }
   return errors;
@@ -1537,6 +1745,23 @@ function normalizePayload(
   )
     payload.useYn = text(row.useYn) || "Y";
   if (config.title === "상세코드 관리") payload.useYn = text(row.useYn) || "Y";
+  if (config.title === "배치 정의 관리") {
+    payload.batchId = row.batchId;
+    payload.executionParameters = text(row.executionParameters).trim()
+      ? JSON.parse(text(row.executionParameters))
+      : {};
+    payload.maxExecutionSeconds = Number(row.maxExecutionSeconds);
+    payload.useYn = text(row.useYn) || "Y";
+  }
+  if (config.title === "배치 실행 관리") {
+    payload.executionParameters = text(row.executionParameters).trim()
+      ? JSON.parse(text(row.executionParameters))
+      : {};
+  }
+  if (config.title === "배치 오류 재처리") {
+    payload.originalExecutionId = row.originalExecutionId;
+    payload.targetId = row.targetId;
+  }
   void route;
   return payload;
 }
@@ -1591,6 +1816,10 @@ function text(value: unknown) {
   if (value === null || value === undefined) return "";
   if (typeof value === "object") return JSON.stringify(value);
   return String(value);
+}
+
+function parseJson(value: string) {
+  return value.trim() ? JSON.parse(value) : {};
 }
 
 function roleText(value: unknown) {

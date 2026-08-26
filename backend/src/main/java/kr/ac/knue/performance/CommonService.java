@@ -262,8 +262,114 @@ public class CommonService {
         return mapper.detailCodes(groupId, request.codeValue()).get(0);
     }
 
+    public PageResult batchDefinitions(String filter, int page, int size) {
+        List<Map<String, Object>> items = mapper.batchDefinitions(filter, size, page * size);
+        items.forEach(row -> parseJsonField(row, "executionParameters"));
+        return page(items, page, size);
+    }
+
+    @Transactional
+    public Map<String, Object> saveBatchDefinition(String pathBatchId, BatchDefinitionRequest request) {
+        if (request == null || blank(request.batchId()) || blank(request.batchType()) || blank(request.scheduleCycle()) || request.maxExecutionSeconds() == null || request.maxExecutionSeconds() <= 0 || blank(request.ownerUserId()) || blank(request.reason())) {
+            throw bad("VALIDATION_ERROR", "배치 정의 필수값과 사유를 입력하세요.", Map.of("batchId", "required", "batchType", "required", "scheduleCycle", "required", "maxExecutionSeconds", "positiveRequired", "ownerUserId", "required", "reason", "required"));
+        }
+        if (pathBatchId != null && !pathBatchId.equals(request.batchId())) throw bad("VALIDATION_ERROR", "배치ID는 변경할 수 없습니다.", Map.of("batchId", "immutable"));
+        if (mapper.byId("user_account", "user_id", request.ownerUserId()) == null) throw notFound("담당자를 찾을 수 없습니다.");
+        if (!blank(request.predecessorBatchId()) && mapper.byId("batch_definition", "batch_id", request.predecessorBatchId()) == null) throw notFound("선행 배치를 찾을 수 없습니다.");
+        if (!blank(request.successorBatchId()) && mapper.byId("batch_definition", "batch_id", request.successorBatchId()) == null) throw notFound("후행 배치를 찾을 수 없습니다.");
+        Map<String, Object> before = mapper.byId("batch_definition", "batch_id", request.batchId());
+        Map<String, Object> row = row("batchId", request.batchId(), "batchType", request.batchType(), "scheduleCycle", request.scheduleCycle(), "predecessorBatchId", request.predecessorBatchId(), "successorBatchId", request.successorBatchId(), "executionParameters", json(request.executionParameters()), "maxExecutionSeconds", request.maxExecutionSeconds(), "ownerUserId", request.ownerUserId(), "useYn", yn(request.useYn()));
+        if (mapper.updateBatchDefinition(row) == 0) mapper.insertBatchDefinition(row);
+        history("batch_definition", request.batchId(), before, row, request.reason());
+        return oneBatchDefinition(request.batchId());
+    }
+
+    public PageResult batchExecutions(String filter, int page, int size) {
+        List<Map<String, Object>> items = mapper.batchExecutions(filter, size, page * size);
+        items.forEach(row -> parseJsonField(row, "executionParameters"));
+        return page(items, page, size);
+    }
+
+    @Transactional
+    public Map<String, Object> createBatchManualRun(BatchManualRunRequest request) {
+        if (request == null || blank(request.batchId()) || blank(request.reason())) throw bad("VALIDATION_ERROR", "배치ID와 사유를 입력하세요.", Map.of("batchId", "required", "reason", "required"));
+        if (mapper.byId("batch_definition", "batch_id", request.batchId()) == null) throw notFound("배치 정의를 찾을 수 없습니다.");
+        String executionId = "EXEC-" + UUID.randomUUID();
+        Map<String, Object> row = row("executionId", executionId, "batchId", request.batchId(), "operationType", "MANUAL_RUN", "executionParameters", json(request.executionParameters()), "reason", request.reason(), "operatorUserId", RequestContext.actor(), "executionStatus", "RUNNING", "originalExecutionId", null);
+        mapper.insertBatchExecution(row);
+        mapper.insertBatchExecutionResult(row("executionId", executionId, "logFilePath", "/var/log/batch/" + executionId + ".log"));
+        history("batch_execution", executionId, null, row, request.reason());
+        return oneBatchExecution(executionId);
+    }
+
+    @Transactional
+    public Map<String, Object> stopBatchExecution(String executionId, BatchStopRequest request) {
+        if (request == null || blank(request.reason())) throw bad("VALIDATION_ERROR", "중지 사유를 입력하세요.", Map.of("reason", "required"));
+        Map<String, Object> before = mapper.byId("batch_execution", "execution_id", executionId);
+        if (before == null) throw notFound("배치 실행을 찾을 수 없습니다.");
+        mapper.stopBatchExecution(executionId, request.reason());
+        Map<String, Object> after = mapper.byId("batch_execution", "execution_id", executionId);
+        history("batch_execution", executionId, before, after, request.reason());
+        return oneBatchExecution(executionId);
+    }
+
+    @Transactional
+    public Map<String, Object> rerunBatchExecution(String executionId, BatchRerunRequest request) {
+        if (request == null || blank(request.reason())) throw bad("VALIDATION_ERROR", "재실행 사유를 입력하세요.", Map.of("reason", "required"));
+        Map<String, Object> original = mapper.byId("batch_execution", "execution_id", executionId);
+        if (original == null) throw notFound("원 배치 실행을 찾을 수 없습니다.");
+        String rerunId = "EXEC-" + UUID.randomUUID();
+        Map<String, Object> row = row("executionId", rerunId, "batchId", str(original.get("batch_id")), "operationType", "RERUN", "executionParameters", json(request.executionParameters()), "reason", request.reason(), "operatorUserId", RequestContext.actor(), "executionStatus", "REQUESTED", "originalExecutionId", executionId);
+        mapper.insertBatchExecution(row);
+        mapper.insertBatchExecutionResult(row("executionId", rerunId, "logFilePath", "/var/log/batch/" + rerunId + ".log"));
+        history("batch_execution", rerunId, null, row, request.reason());
+        return oneBatchExecution(rerunId);
+    }
+
+    public Map<String, Object> batchExecutionResult(String executionId) {
+        Map<String, Object> result = mapper.batchExecutionResult(executionId);
+        if (result == null) throw notFound("배치 결과를 찾을 수 없습니다.");
+        return result;
+    }
+
+    public PageResult batchReprocessTargets(String filter, int page, int size) {
+        return page(mapper.batchReprocessTargets(filter, size, page * size), page, size);
+    }
+
+    @Transactional
+    public Map<String, Object> createBatchReprocessRun(BatchReprocessRunRequest request) {
+        if (request == null || blank(request.originalExecutionId()) || blank(request.targetId()) || blank(request.reason())) throw bad("VALIDATION_ERROR", "원실행ID, 재처리 대상, 사유를 입력하세요.", Map.of("originalExecutionId", "required", "targetId", "required", "reason", "required"));
+        Map<String, Object> target = mapper.byId("batch_reprocess_target", "target_id", request.targetId());
+        if (target == null) throw notFound("재처리 대상을 찾을 수 없습니다.");
+        if (!request.originalExecutionId().equals(str(target.get("original_execution_id")))) throw bad("VALIDATION_ERROR", "재처리 대상과 원실행ID가 일치하지 않습니다.", Map.of("targetId", "mismatch"));
+        if (!List.of("FAILED", "READY").contains(str(target.get("failure_status")))) throw new ApiException(HttpStatus.CONFLICT, "CONFLICT", "실패 상태의 재처리 대상만 실행할 수 있습니다.", Map.of("targetId", request.targetId()));
+        String reprocessExecutionId = "REPROC-" + UUID.randomUUID();
+        Map<String, Object> row = row("reprocessExecutionId", reprocessExecutionId, "originalExecutionId", request.originalExecutionId(), "targetId", request.targetId(), "reason", request.reason(), "resultStatus", "REQUESTED", "operatorUserId", RequestContext.actor());
+        mapper.insertBatchReprocessRun(row);
+        history("batch_reprocess_execution", reprocessExecutionId, null, row, request.reason());
+        return batchReprocessRun(reprocessExecutionId);
+    }
+
+    public Map<String, Object> batchReprocessRun(String reprocessExecutionId) {
+        Map<String, Object> result = mapper.batchReprocessRun(reprocessExecutionId);
+        if (result == null) throw notFound("재처리 결과를 찾을 수 없습니다.");
+        return result;
+    }
+
     private CurrentUser currentUser(Map<String, Object> user) {
         return new CurrentUser(str(user.get("userId")), str(user.get("loginId")), str(user.get("name")), mapper.rolesForUser(str(user.get("userId"))));
+    }
+
+    private Map<String, Object> oneBatchDefinition(String batchId) {
+        Map<String, Object> found = mapper.batchDefinitions(batchId, 1, 0).stream().findFirst().orElseThrow(() -> notFound("배치 정의를 찾을 수 없습니다."));
+        parseJsonField(found, "executionParameters");
+        return found;
+    }
+
+    private Map<String, Object> oneBatchExecution(String executionId) {
+        Map<String, Object> found = mapper.batchExecutions(executionId, 1, 0).stream().findFirst().orElseThrow(() -> notFound("배치 실행을 찾을 수 없습니다."));
+        parseJsonField(found, "executionParameters");
+        return found;
     }
 
     private Map<String, Object> firstUser(String userId) {
@@ -331,6 +437,25 @@ public class CommonService {
             mapper.history(UUID.randomUUID().toString(), entity, entityId, before == null ? null : objectMapper.writeValueAsString(before), after == null ? null : objectMapper.writeValueAsString(after), reason, RequestContext.actor());
         } catch (JsonProcessingException e) {
             throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "SERIALIZATION_ERROR", "변경 이력 직렬화에 실패했습니다.", Map.of());
+        }
+    }
+
+    private String json(Object value) {
+        if (value == null) return "{}";
+        try {
+            return objectMapper.writeValueAsString(value);
+        } catch (JsonProcessingException e) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", "JSON 형식을 확인하세요.", Map.of("executionParameters", "invalidJson"));
+        }
+    }
+
+    private void parseJsonField(Map<String, Object> row, String key) {
+        Object value = row.get(key);
+        if (value == null || value instanceof Map<?, ?>) return;
+        try {
+            row.put(key, objectMapper.readValue(String.valueOf(value), Map.class));
+        } catch (JsonProcessingException e) {
+            row.put(key, Map.of());
         }
     }
 
