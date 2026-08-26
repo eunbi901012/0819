@@ -116,6 +116,55 @@ public class SqlProvider {
         return "UPDATE detail_code SET code_name=#{codeName}, parent_code_value=#{parentCodeValue}, sort_order=#{sortOrder}, extra_attributes=#{extraAttributes}, valid_from=CAST(#{validFrom} AS DATE), valid_to=CAST(#{validTo} AS DATE), use_yn=#{useYn}, updated_at=CURRENT_TIMESTAMP WHERE group_id=#{groupId} AND code_value=#{codeValue}";
     }
 
+    public static String batchDefinitions(Map<String, Object> p) {
+        StringBuilder sql = new StringBuilder("SELECT batch_id AS \"batchId\", batch_type AS \"batchType\", schedule_cycle AS \"scheduleCycle\", predecessor_batch_id AS \"predecessorBatchId\", successor_batch_id AS \"successorBatchId\", execution_parameters AS \"executionParameters\", max_execution_seconds AS \"maxExecutionSeconds\", owner_user_id AS \"ownerUserId\", use_yn AS \"useYn\", updated_at AS \"updatedAt\" FROM batch_definition WHERE 1=1");
+        if (has(p, "filter")) sql.append(" AND (batch_id LIKE CONCAT('%', #{filter}, '%') OR batch_type LIKE CONCAT('%', #{filter}, '%') OR schedule_cycle LIKE CONCAT('%', #{filter}, '%') OR owner_user_id LIKE CONCAT('%', #{filter}, '%'))");
+        sql.append(" ORDER BY batch_id LIMIT #{limit} OFFSET #{offset}");
+        return sql.toString();
+    }
+
+    public static String insertBatchDefinition(Map<String, Object> r) {
+        return "INSERT INTO batch_definition (batch_id,batch_type,schedule_cycle,predecessor_batch_id,successor_batch_id,execution_parameters,max_execution_seconds,owner_user_id,use_yn) VALUES (#{batchId},#{batchType},#{scheduleCycle},#{predecessorBatchId},#{successorBatchId},#{executionParameters},#{maxExecutionSeconds},#{ownerUserId},#{useYn})";
+    }
+
+    public static String updateBatchDefinition(Map<String, Object> r) {
+        return "UPDATE batch_definition SET batch_type=#{batchType}, schedule_cycle=#{scheduleCycle}, predecessor_batch_id=#{predecessorBatchId}, successor_batch_id=#{successorBatchId}, execution_parameters=#{executionParameters}, max_execution_seconds=#{maxExecutionSeconds}, owner_user_id=#{ownerUserId}, use_yn=#{useYn}, updated_at=CURRENT_TIMESTAMP WHERE batch_id=#{batchId}";
+    }
+
+    public static String batchExecutions(Map<String, Object> p) {
+        StringBuilder sql = new StringBuilder("SELECT execution_id AS \"executionId\", batch_id AS \"batchId\", operation_type AS \"operationType\", execution_parameters AS \"executionParameters\", reason AS \"reason\", operator_user_id AS \"operatorUserId\", execution_status AS \"executionStatus\", original_execution_id AS \"originalExecutionId\", created_at AS \"createdAt\", updated_at AS \"updatedAt\" FROM batch_execution WHERE 1=1");
+        if (has(p, "filter")) sql.append(" AND (execution_id LIKE CONCAT('%', #{filter}, '%') OR batch_id LIKE CONCAT('%', #{filter}, '%') OR operation_type LIKE CONCAT('%', #{filter}, '%') OR execution_status LIKE CONCAT('%', #{filter}, '%') OR original_execution_id LIKE CONCAT('%', #{filter}, '%'))");
+        sql.append(" ORDER BY created_at DESC, execution_id DESC LIMIT #{limit} OFFSET #{offset}");
+        return sql.toString();
+    }
+
+    public static String insertBatchExecution(Map<String, Object> r) {
+        return "INSERT INTO batch_execution (execution_id,batch_id,operation_type,execution_parameters,reason,operator_user_id,execution_status,original_execution_id) VALUES (#{executionId},#{batchId},#{operationType},#{executionParameters},#{reason},#{operatorUserId},#{executionStatus},#{originalExecutionId})";
+    }
+
+    public static String batchExecutionResult(Map<String, Object> p) {
+        return "SELECT r.execution_id AS \"executionId\", e.batch_id AS \"batchId\", e.execution_status AS \"executionStatus\", r.started_at AS \"startedAt\", r.ended_at AS \"endedAt\", r.processed_count AS \"processedCount\", r.success_count AS \"successCount\", r.failure_count AS \"failureCount\", r.excluded_count AS \"excludedCount\", r.elapsed_seconds AS \"elapsedSeconds\", r.log_file_path AS \"logFilePath\" FROM batch_execution_result r JOIN batch_execution e ON e.execution_id=r.execution_id WHERE r.execution_id=#{executionId}";
+    }
+
+    public static String insertBatchExecutionResult(Map<String, Object> r) {
+        return "INSERT INTO batch_execution_result (execution_id,started_at,ended_at,processed_count,success_count,failure_count,excluded_count,elapsed_seconds,log_file_path) VALUES (#{executionId},CURRENT_TIMESTAMP,NULL,0,0,0,0,0,#{logFilePath})";
+    }
+
+    public static String batchReprocessTargets(Map<String, Object> p) {
+        StringBuilder sql = new StringBuilder("SELECT target_id AS \"targetId\", original_execution_id AS \"originalExecutionId\", target_type AS \"targetType\", failure_reference AS \"failureReference\", failure_status AS \"failureStatus\", updated_at AS \"updatedAt\" FROM batch_reprocess_target WHERE 1=1");
+        if (has(p, "filter")) sql.append(" AND (target_id LIKE CONCAT('%', #{filter}, '%') OR original_execution_id LIKE CONCAT('%', #{filter}, '%') OR failure_reference LIKE CONCAT('%', #{filter}, '%') OR failure_status LIKE CONCAT('%', #{filter}, '%'))");
+        sql.append(" ORDER BY updated_at DESC, target_id LIMIT #{limit} OFFSET #{offset}");
+        return sql.toString();
+    }
+
+    public static String batchReprocessRun(Map<String, Object> p) {
+        return "SELECT reprocess_execution_id AS \"reprocessExecutionId\", original_execution_id AS \"originalExecutionId\", target_id AS \"targetId\", reason AS \"reason\", result_status AS \"resultStatus\", operator_user_id AS \"operatorUserId\", created_at AS \"createdAt\" FROM batch_reprocess_execution WHERE reprocess_execution_id=#{reprocessExecutionId}";
+    }
+
+    public static String insertBatchReprocessRun(Map<String, Object> r) {
+        return "INSERT INTO batch_reprocess_execution (reprocess_execution_id,original_execution_id,target_id,reason,result_status,operator_user_id) VALUES (#{reprocessExecutionId},#{originalExecutionId},#{targetId},#{reason},#{resultStatus},#{operatorUserId})";
+    }
+
     private static boolean has(Map<String, Object> p, String key) {
         Object value = p.get(key);
         return value != null && !String.valueOf(value).isBlank();
