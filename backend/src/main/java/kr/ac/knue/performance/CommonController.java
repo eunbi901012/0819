@@ -2,6 +2,8 @@ package kr.ac.knue.performance;
 
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Map;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.ResponseCookie;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -238,6 +240,41 @@ public class CommonController {
     @GetMapping("/api/batch-reprocess-runs/{reprocessExecutionId}")
     ApiResponse<Map<String, Object>> batchReprocessRun(@PathVariable String reprocessExecutionId) {
         return ApiResponse.ok(service.batchReprocessRun(reprocessExecutionId));
+    }
+
+    @GetMapping("/api/positions")
+    ApiResponse<PageResult> positions(@RequestParam String baseDate, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.positions(baseDate, page, size));
+    }
+
+    @PostMapping("/api/position-assignments")
+    ResponseEntity<ApiResponse<Map<String, Object>>> createPositionAssignment(@RequestBody PositionAssignmentRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(service.createPositionAssignment(request)));
+    }
+
+    @GetMapping("/api/business-assignees")
+    ApiResponse<PageResult> businessAssignees(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.businessAssignees(page, size));
+    }
+
+    @PostMapping("/api/business-assignees")
+    ResponseEntity<ApiResponse<Map<String, Object>>> createBusinessAssignee(@RequestBody BusinessAssigneeRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(service.createBusinessAssignee(request)));
+    }
+
+    @GetMapping("/api/data-scope-rules")
+    ApiResponse<PageResult> dataScopeRules(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
+        return ApiResponse.ok(service.dataScopeRules(page, size));
+    }
+
+    @PutMapping("/api/data-scope-rules/{ruleId}")
+    ApiResponse<Map<String, Object>> saveDataScopeRule(@PathVariable String ruleId, @RequestBody DataScopeRuleRequest request) {
+        return ApiResponse.ok(service.saveDataScopeRule(ruleId, request));
+    }
+
+    @PostMapping("/api/data-scope-evaluations")
+    ApiResponse<Map<String, Object>> evaluateDataScope(@RequestBody DataScopeEvaluationRequest request) {
+        return ApiResponse.ok(service.evaluateDataScope(request));
     }
 
 }
