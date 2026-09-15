@@ -72,3 +72,15 @@ record BatchRerunRequest(JsonNode executionParameters, String reason) {
 
 record BatchReprocessRunRequest(String originalExecutionId, String targetId, String reason) {
 }
+
+record PositionAssignmentRequest(String assignmentId, String positionCode, String positionName, String userId, String organizationCode, String validFrom, String validTo, String reason) {
+}
+
+record BusinessAssigneeRequest(String assigneeId, String businessOrganizationCode, String assigneeUserId, String businessAreaCode, String dataScope, Boolean processingPermission, String validFrom, String validTo, String reason) {
+}
+
+record DataScopeRuleRequest(String ruleId, String roleCode, String dataScopeType, String organizationCode, String businessAreaCode, String useYn, String reason) {
+}
+
+record DataScopeEvaluationRequest(String userId, String roleCode, String organizationCode, String businessAreaCode, String baseDate) {
+}

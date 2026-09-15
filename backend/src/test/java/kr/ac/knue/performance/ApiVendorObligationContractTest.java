@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import jakarta.servlet.http.Cookie;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -545,6 +546,136 @@ class ApiVendorObligationContractTest {
             .andExpect(jsonPath("$.error.code").value("NOT_FOUND"));
     }
 
+    @Test
+    void missing_vendor_obligations_are_backed_by_literal_paths_request_history_and_source_state_assertions() throws Exception {
+        cleanupBatchDefinition("BATCH-VOB-STRICT");
+        cleanupBusinessAssignee("BA-VOB-STRICT");
+        cleanupPositionAssignment("PA-VOB-STRICT");
+        cleanupDataScopeRule("DS-VOB-STRICT");
+        String session = loginAsAdmin();
+        long sourceUserRowsBefore = countAllRows("user_account");
+        long menuPermissionRowsBefore = countMenuPermissionRows("ROLE", "R09");
+        long unauthorizedReprocessRowsBefore = countAllRows("batch_reprocess_execution");
+
+        mockMvc.perform(post("/api/batch-reprocess-runs")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"originalExecutionId\":\"EXEC-SEED-FAILED\",\"targetId\":\"RPT-EXEC-SEED-FAILED\",\"reason\":\"unauthorized strict\"}"))
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.error.code").value("UNAUTHORIZED"));
+        assertThat(countAllRows("batch_reprocess_execution")).isEqualTo(unauthorizedReprocessRowsBefore);
+
+        mockMvc.perform(post("/api/batch-definitions")
+                .cookie(sessionCookie(session))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"batchId\":\"BATCH-VOB-STRICT\",\"batchType\":\"EVALUATION_DATA\",\"scheduleCycle\":\"DAILY 05:30\",\"predecessorBatchId\":\"BATCH-EVAL-DATA\",\"successorBatchId\":null,\"executionParameters\":{\"portal\":\"strict\"},\"maxExecutionSeconds\":600,\"ownerUserId\":\"U-ADMIN\",\"useYn\":\"Y\",\"reason\":\"strict create\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.batchId").value("BATCH-VOB-STRICT"));
+        assertThat(countRows("batch_definition", "batch_id", "BATCH-VOB-STRICT")).isEqualTo(1L);
+        assertLatestHistoryHasRequestIdActorAndReason("batch_definition", "BATCH-VOB-STRICT", "strict create");
+
+        mockMvc.perform(patch("/api/batch-definitions/BATCH-VOB-STRICT")
+                .cookie(sessionCookie(session))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"batchId\":\"BATCH-VOB-STRICT\",\"batchType\":\"EVALUATION_DATA\",\"scheduleCycle\":\"DAILY 06:30\",\"predecessorBatchId\":\"BATCH-EVAL-DATA\",\"successorBatchId\":null,\"executionParameters\":{\"portal\":\"strict-updated\"},\"maxExecutionSeconds\":900,\"ownerUserId\":\"U-ADMIN\",\"useYn\":\"Y\",\"reason\":\"strict patch\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.scheduleCycle").value("DAILY 06:30"));
+        assertThat(scheduleCycleForBatchDefinition("BATCH-VOB-STRICT")).isEqualTo("DAILY 06:30");
+        assertLatestHistoryHasRequestIdActorAndReason("batch_definition", "BATCH-VOB-STRICT", "strict patch");
+
+        MvcResult manual = mockMvc.perform(post("/api/batch-executions/manual-runs")
+                .cookie(sessionCookie(session))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"batchId\":\"BATCH-EVAL-DATA\",\"executionParameters\":{\"scope\":\"strict\"},\"reason\":\"strict manual\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.operationType").value("MANUAL_RUN"))
+            .andExpect(jsonPath("$.data.executionStatus").value("RUNNING"))
+            .andReturn();
+        String manualExecutionId = JsonTestSupport.read(manual, "$.data.executionId");
+        assertThat(countRows("batch_execution", "execution_id", manualExecutionId)).isEqualTo(1L);
+        assertThat(countRows("batch_execution_result", "execution_id", manualExecutionId)).isEqualTo(1L);
+        assertLatestHistoryHasRequestIdActorAndReason("batch_execution", manualExecutionId, "strict manual");
+
+        resetSeedExecutionStatus("EXEC-SEED-FAILED", "RUNNING");
+        mockMvc.perform(patch("/api/batch-executions/EXEC-SEED-FAILED/stop")
+                .cookie(sessionCookie(session))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"reason\":\"strict stop\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.executionStatus").value("STOP_REQUESTED"));
+        assertThat(executionStatusForBatchExecution("EXEC-SEED-FAILED")).isEqualTo("STOP_REQUESTED");
+        assertLatestHistoryHasRequestIdActorAndReason("batch_execution", "EXEC-SEED-FAILED", "strict stop");
+
+        MvcResult rerun = mockMvc.perform(post("/api/batch-executions/EXEC-SEED-FAILED/reruns")
+                .cookie(sessionCookie(session))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"executionParameters\":{\"strict\":true},\"reason\":\"strict rerun\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.operationType").value("RERUN"))
+            .andExpect(jsonPath("$.data.originalExecutionId").value("EXEC-SEED-FAILED"))
+            .andReturn();
+        String rerunId = JsonTestSupport.read(rerun, "$.data.executionId");
+        assertThat(countRows("batch_execution", "execution_id", rerunId)).isEqualTo(1L);
+        assertThat(countRows("batch_execution_result", "execution_id", rerunId)).isEqualTo(1L);
+        assertLatestHistoryHasRequestIdActorAndReason("batch_execution", rerunId, "strict rerun");
+
+        MvcResult reprocess = mockMvc.perform(post("/api/batch-reprocess-runs")
+                .cookie(sessionCookie(session))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"originalExecutionId\":\"EXEC-SEED-FAILED\",\"targetId\":\"RPT-EXEC-SEED-FAILED\",\"reason\":\"strict reprocess\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.resultStatus").value("REQUESTED"))
+            .andReturn();
+        String reprocessId = JsonTestSupport.read(reprocess, "$.data.reprocessExecutionId");
+        assertThat(countRows("batch_reprocess_execution", "reprocess_execution_id", reprocessId)).isEqualTo(1L);
+        assertLatestHistoryHasRequestIdActorAndReason("batch_reprocess_execution", reprocessId, "strict reprocess");
+
+        mockMvc.perform(post("/api/business-assignees")
+                .cookie(sessionCookie(session))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"assigneeId\":\"BA-VOB-STRICT\",\"businessOrganizationCode\":\"COL-EDU\",\"assigneeUserId\":\"U-001\",\"businessAreaCode\":\"EVALUATION\",\"dataScope\":\"COL-EDU\",\"processingPermission\":true,\"validFrom\":\"2026-01-01\",\"validTo\":\"2026-12-31\",\"reason\":\"strict business assignee\"}"))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.data.assigneeId").value("BA-VOB-STRICT"));
+        assertThat(countRows("business_assignee", "assignee_id", "BA-VOB-STRICT")).isEqualTo(1L);
+        assertLatestHistoryHasRequestIdActorAndReason("business_assignee", "BA-VOB-STRICT", "strict business assignee");
+
+        mockMvc.perform(post("/api/position-assignments")
+                .cookie(sessionCookie(session))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"assignmentId\":\"PA-VOB-STRICT\",\"positionCode\":\"DEPT_CHAIR\",\"positionName\":\"학과장\",\"userId\":\"U-002\",\"organizationCode\":\"DEPT-CS\",\"validFrom\":\"2026-03-01\",\"validTo\":\"2026-12-31\",\"reason\":\"strict position assignment\",\"name\":\"원천변경금지\"}"))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.data.assignmentId").value("PA-VOB-STRICT"));
+        assertThat(countRows("position_assignment", "assignment_id", "PA-VOB-STRICT")).isEqualTo(1L);
+        assertLatestHistoryHasRequestIdActorAndReason("position_assignment", "PA-VOB-STRICT", "strict position assignment");
+        assertThat(countAllRows("user_account")).isEqualTo(sourceUserRowsBefore);
+
+        mockMvc.perform(put("/api/data-scope-rules/DS-VOB-STRICT")
+                .cookie(sessionCookie(session))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"ruleId\":\"DS-VOB-STRICT\",\"roleCode\":\"R03\",\"dataScopeType\":\"COLLEGE\",\"organizationCode\":\"COL-EDU\",\"businessAreaCode\":\"EVALUATION\",\"useYn\":\"Y\",\"reason\":\"strict data scope\",\"menuId\":\"MENU-USER\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.ruleId").value("DS-VOB-STRICT"));
+        assertThat(countRows("data_scope_rule", "rule_id", "DS-VOB-STRICT")).isEqualTo(1L);
+        assertLatestHistoryHasRequestIdActorAndReason("data_scope_rule", "DS-VOB-STRICT", "strict data scope");
+        assertThat(countMenuPermissionRows("ROLE", "R09")).isEqualTo(menuPermissionRowsBefore);
+
+        mockMvc.perform(post("/api/data-scope-evaluations")
+                .cookie(sessionCookie(session))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"userId\":\"U-001\",\"roleCode\":\"R07\",\"organizationCode\":\"COL-EDU\",\"businessAreaCode\":\"EVALUATION\",\"baseDate\":\"2026-06-01\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.allowed").value(true))
+            .andExpect(jsonPath("$.data.appliedConditions.organizationCode").value("COL-EDU"))
+            .andExpect(jsonPath("$.data.appliedConditions.businessAreaCode").value("EVALUATION"));
+
+        mockMvc.perform(post("/api/data-scope-evaluations")
+                .cookie(sessionCookie(session))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"userId\":\"U-001\",\"organizationCode\":\"DEPT-CS\",\"baseDate\":\"2026-06-01\"}"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error.meta.roleCode").exists());
+        assertThat(countAllRows("user_account")).isEqualTo(sourceUserRowsBefore);
+    }
+
     private Cookie sessionCookie(String session) {
         return new Cookie("AIOPS_SESSION", session);
     }
@@ -586,9 +717,66 @@ class ApiVendorObligationContractTest {
                 Long.class,
                 id
             );
+            case "batch_reprocess_execution:reprocess_execution_id" -> jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM batch_reprocess_execution WHERE reprocess_execution_id = ?",
+                Long.class,
+                id
+            );
+            case "business_assignee:assignee_id" -> jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM business_assignee WHERE assignee_id = ?",
+                Long.class,
+                id
+            );
+            case "position_assignment:assignment_id" -> jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM position_assignment WHERE assignment_id = ?",
+                Long.class,
+                id
+            );
+            case "data_scope_rule:rule_id" -> jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM data_scope_rule WHERE rule_id = ?",
+                Long.class,
+                id
+            );
             default -> throw new IllegalArgumentException("unsupported row count target");
         };
         return count == null ? 0L : count;
+    }
+
+    private long countAllRows(String table) {
+        Long count = switch (table) {
+            case "user_account" -> jdbcTemplate.queryForObject("SELECT COUNT(*) FROM user_account", Long.class);
+            case "batch_reprocess_execution" -> jdbcTemplate.queryForObject("SELECT COUNT(*) FROM batch_reprocess_execution", Long.class);
+            default -> throw new IllegalArgumentException("unsupported row count target");
+        };
+        return count == null ? 0L : count;
+    }
+
+    private long countMenuPermissionRows(String targetType, String targetId) {
+        Long count = jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM menu_permission WHERE target_type = ? AND target_id = ?",
+            Long.class,
+            targetType,
+            targetId
+        );
+        return count == null ? 0L : count;
+    }
+
+    private void assertLatestHistoryHasRequestIdActorAndReason(String entityName, String entityId, String reason) {
+        Map<String, Object> history = jdbcTemplate.queryForMap(
+            "SELECT history_id, actor_user_id, reason, after_value FROM change_history WHERE entity_name = ? AND entity_id = ? ORDER BY changed_at DESC LIMIT 1",
+            entityName,
+            entityId
+        );
+        assertThat(historyValue(history, "history_id")).isNotBlank();
+        assertThat(historyValue(history, "actor_user_id")).isEqualTo("U-ADMIN");
+        assertThat(historyValue(history, "reason")).isEqualTo(reason);
+        assertThat(historyValue(history, "after_value")).isNotBlank();
+    }
+
+    private String historyValue(Map<String, Object> history, String key) {
+        Object value = history.get(key);
+        if (value == null) value = history.get(key.toUpperCase());
+        return value == null ? "" : String.valueOf(value);
     }
 
     private long countRows(String table, String idColumn, String id, String statusColumn, String status) {
@@ -635,6 +823,18 @@ class ApiVendorObligationContractTest {
 
     private void cleanupReprocessExecution(String reprocessExecutionId) {
         jdbcTemplate.update("DELETE FROM batch_reprocess_execution WHERE reprocess_execution_id = ?", reprocessExecutionId);
+    }
+
+    private void cleanupPositionAssignment(String assignmentId) {
+        jdbcTemplate.update("DELETE FROM position_assignment WHERE assignment_id = ?", assignmentId);
+    }
+
+    private void cleanupBusinessAssignee(String assigneeId) {
+        jdbcTemplate.update("DELETE FROM business_assignee WHERE assignee_id = ?", assigneeId);
+    }
+
+    private void cleanupDataScopeRule(String ruleId) {
+        jdbcTemplate.update("DELETE FROM data_scope_rule WHERE rule_id = ?", ruleId);
     }
 
     private void cleanupCodeGroup(String groupId) {

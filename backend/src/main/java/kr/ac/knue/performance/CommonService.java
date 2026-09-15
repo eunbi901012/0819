@@ -356,6 +356,64 @@ public class CommonService {
         return result;
     }
 
+    public PageResult positions(String baseDate, int page, int size) {
+        requireDate(baseDate, "baseDate");
+        return page(mapper.positions(baseDate, size, page * size), page, size);
+    }
+
+    @Transactional
+    public Map<String, Object> createPositionAssignment(PositionAssignmentRequest request) {
+        validatePositionAssignment(request);
+        String assignmentId = blank(request.assignmentId()) ? "PA-" + UUID.randomUUID() : request.assignmentId();
+        Map<String, Object> row = row("assignmentId", assignmentId, "positionCode", request.positionCode(), "positionName", request.positionName(), "userId", request.userId(), "organizationCode", request.organizationCode(), "validFrom", request.validFrom(), "validTo", request.validTo());
+        mapper.insertPositionAssignment(row);
+        history("position_assignment", assignmentId, null, row, request.reason());
+        return mapper.positions(request.validFrom(), 1, 0).stream().filter(item -> assignmentId.equals(str(item.get("assignmentId")))).findFirst().orElse(row);
+    }
+
+    public PageResult businessAssignees(int page, int size) {
+        return page(mapper.businessAssignees(size, page * size), page, size);
+    }
+
+    @Transactional
+    public Map<String, Object> createBusinessAssignee(BusinessAssigneeRequest request) {
+        validateBusinessAssignee(request);
+        String assigneeId = blank(request.assigneeId()) ? "BA-" + UUID.randomUUID() : request.assigneeId();
+        Map<String, Object> row = row("assigneeId", assigneeId, "businessOrganizationCode", request.businessOrganizationCode(), "assigneeUserId", request.assigneeUserId(), "businessAreaCode", request.businessAreaCode(), "dataScope", request.dataScope(), "processingPermission", request.processingPermission(), "validFrom", request.validFrom(), "validTo", request.validTo());
+        mapper.insertBusinessAssignee(row);
+        history("business_assignee", assigneeId, null, row, request.reason());
+        return mapper.businessAssignees(100, 0).stream().filter(item -> assigneeId.equals(str(item.get("assigneeId")))).findFirst().orElse(row);
+    }
+
+    public PageResult dataScopeRules(int page, int size) {
+        return page(mapper.dataScopeRules(size, page * size), page, size);
+    }
+
+    @Transactional
+    public Map<String, Object> saveDataScopeRule(String ruleId, DataScopeRuleRequest request) {
+        validateDataScopeRule(ruleId, request);
+        Map<String, Object> before = mapper.byId("data_scope_rule", "rule_id", ruleId);
+        Map<String, Object> row = row("ruleId", ruleId, "roleCode", request.roleCode(), "dataScopeType", request.dataScopeType(), "organizationCode", request.organizationCode(), "businessAreaCode", request.businessAreaCode(), "useYn", yn(request.useYn()));
+        if (mapper.updateDataScopeRule(row) == 0) mapper.insertDataScopeRule(row);
+        history("data_scope_rule", ruleId, before, row, request.reason());
+        return mapper.dataScopeRules(200, 0).stream().filter(item -> ruleId.equals(str(item.get("ruleId")))).findFirst().orElse(row);
+    }
+
+    public Map<String, Object> evaluateDataScope(DataScopeEvaluationRequest request) {
+        if (request == null || blank(request.roleCode())) throw bad("VALIDATION_ERROR", "역할코드를 입력하세요.", Map.of("roleCode", "required"));
+        String baseDate = blank(request.baseDate()) ? LocalDate.now().toString() : request.baseDate();
+        requireDate(baseDate, "baseDate");
+        List<Map<String, Object>> rules = mapper.activeDataScopeRules(request.roleCode());
+        Map<String, Object> applied = new LinkedHashMap<>();
+        applied.put("roleCode", request.roleCode());
+        applied.put("userId", request.userId());
+        applied.put("baseDate", baseDate);
+        applied.put("organizationCode", request.organizationCode());
+        applied.put("businessAreaCode", request.businessAreaCode());
+        boolean allowed = rules.stream().anyMatch(rule -> scopeAllows(rule, request, baseDate, applied));
+        return row("allowed", allowed, "appliedConditions", applied, "filteredOrganizationCode", allowed ? request.organizationCode() : null);
+    }
+
     private CurrentUser currentUser(Map<String, Object> user) {
         return new CurrentUser(str(user.get("userId")), str(user.get("loginId")), str(user.get("name")), mapper.rolesForUser(str(user.get("userId"))));
     }
@@ -367,7 +425,10 @@ public class CommonService {
     }
 
     private Map<String, Object> oneBatchExecution(String executionId) {
-        Map<String, Object> found = mapper.batchExecutions(executionId, 1, 0).stream().findFirst().orElseThrow(() -> notFound("배치 실행을 찾을 수 없습니다."));
+        Map<String, Object> found = mapper.batchExecutions(executionId, 100, 0).stream()
+            .filter(row -> executionId.equals(str(row.get("executionId"))))
+            .findFirst()
+            .orElseThrow(() -> notFound("배치 실행을 찾을 수 없습니다."));
         parseJsonField(found, "executionParameters");
         return found;
     }
@@ -415,6 +476,59 @@ public class CommonService {
 
     private void upsertDetailCode(Map<String, Object> row) {
         if (mapper.updateDetailCode(row) == 0) mapper.insertDetailCode(row);
+    }
+
+    private void validatePositionAssignment(PositionAssignmentRequest request) {
+        if (request == null || blank(request.positionCode()) || blank(request.userId()) || blank(request.organizationCode()) || blank(request.validFrom())) {
+            throw bad("VALIDATION_ERROR", "보직코드, 대상 사용자, 소속조직, 유효 시작일은 필수입니다.", Map.of("positionCode", "required", "userId", "required", "organizationCode", "required", "validFrom", "required"));
+        }
+        requireDate(request.validFrom(), "validFrom");
+        if (!blank(request.validTo()) && LocalDate.parse(request.validTo()).isBefore(LocalDate.parse(request.validFrom()))) throw bad("VALIDATION_ERROR", "유효 종료일은 시작일보다 빠를 수 없습니다.", Map.of("validTo", "invalidPeriod"));
+        if (mapper.byId("user_account", "user_id", request.userId()) == null) throw notFound("보직 대상 사용자를 찾을 수 없습니다.");
+        if (mapper.byId("organization", "organization_code", request.organizationCode()) == null) throw notFound("보직 소속조직을 찾을 수 없습니다.");
+    }
+
+    private void validateBusinessAssignee(BusinessAssigneeRequest request) {
+        if (request == null || blank(request.businessOrganizationCode()) || blank(request.assigneeUserId()) || blank(request.businessAreaCode()) || blank(request.dataScope()) || request.processingPermission() == null || blank(request.validFrom())) {
+            throw bad("VALIDATION_ERROR", "업무담당자 필수값을 입력하세요.", Map.of("businessOrganizationCode", "required", "assigneeUserId", "required", "businessAreaCode", "required", "dataScope", "required", "processingPermission", "required", "validFrom", "required"));
+        }
+        requireDate(request.validFrom(), "validFrom");
+        if (!blank(request.validTo()) && LocalDate.parse(request.validTo()).isBefore(LocalDate.parse(request.validFrom()))) throw bad("VALIDATION_ERROR", "지정 종료일은 시작일보다 빠를 수 없습니다.", Map.of("validTo", "invalidPeriod"));
+        if (mapper.byId("user_account", "user_id", request.assigneeUserId()) == null) throw notFound("업무담당자를 찾을 수 없습니다.");
+        if (mapper.byId("organization", "organization_code", request.businessOrganizationCode()) == null) throw notFound("업무조직을 찾을 수 없습니다.");
+    }
+
+    private void validateDataScopeRule(String ruleId, DataScopeRuleRequest request) {
+        if (request == null || blank(ruleId) || blank(request.roleCode()) || blank(request.dataScopeType())) throw bad("VALIDATION_ERROR", "데이터 범위 규칙 필수값을 입력하세요.", Map.of("ruleId", "required", "roleCode", "required", "dataScopeType", "required"));
+        if (request.ruleId() != null && !ruleId.equals(request.ruleId())) throw bad("VALIDATION_ERROR", "규칙ID는 경로 값과 일치해야 합니다.", Map.of("ruleId", "pathMismatch"));
+        if (!List.of("SELF", "DEPARTMENT", "COLLEGE", "BUSINESS_AREA", "ALL").contains(request.dataScopeType())) throw bad("VALIDATION_ERROR", "데이터 범위 유형이 올바르지 않습니다.", Map.of("dataScopeType", "SELF|DEPARTMENT|COLLEGE|BUSINESS_AREA|ALL"));
+        if (mapper.byId("role", "role_code", request.roleCode()) == null) throw notFound("역할을 찾을 수 없습니다.");
+        if (!blank(request.organizationCode()) && mapper.byId("organization", "organization_code", request.organizationCode()) == null) throw notFound("조직을 찾을 수 없습니다.");
+    }
+
+    private boolean scopeAllows(Map<String, Object> rule, DataScopeEvaluationRequest request, String baseDate, Map<String, Object> applied) {
+        String scope = str(rule.get("dataScopeType"));
+        if ("ALL".equals(scope)) return true;
+        if ("SELF".equals(scope)) return !blank(request.userId()) && request.userId().equals(RequestContext.actor());
+        if ("DEPARTMENT".equals(scope) || "COLLEGE".equals(scope)) {
+            String ruleOrganization = str(rule.get("organizationCode"));
+            return !blank(ruleOrganization) && ruleOrganization.equals(request.organizationCode());
+        }
+        if ("BUSINESS_AREA".equals(scope)) {
+            List<Map<String, Object>> assignees = mapper.activeBusinessAssignees(request.userId(), request.businessAreaCode(), baseDate);
+            boolean matched = assignees.stream().anyMatch(row -> str(row.get("businessOrganizationCode")).equals(request.organizationCode()) || str(row.get("dataScope")).equals(request.organizationCode()));
+            if (matched) applied.put("businessAreaCode", request.businessAreaCode());
+            return matched;
+        }
+        return false;
+    }
+
+    private void requireDate(String value, String field) {
+        try {
+            LocalDate.parse(value);
+        } catch (RuntimeException e) {
+            throw bad("VALIDATION_ERROR", "날짜 형식을 확인하세요.", Map.of(field, "yyyy-MM-dd"));
+        }
     }
 
     private List<Map<String, Object>> tree(List<Map<String, Object>> rows, String parent) {

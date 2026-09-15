@@ -140,6 +140,33 @@ public interface CommonMapper {
     @InsertProvider(type = SqlProvider.class, method = "insertBatchReprocessRun")
     int insertBatchReprocessRun(Map<String, Object> row);
 
+    @SelectProvider(type = SqlProvider.class, method = "positions")
+    List<Map<String, Object>> positions(@Param("baseDate") String baseDate, @Param("limit") int limit, @Param("offset") int offset);
+
+    @InsertProvider(type = SqlProvider.class, method = "insertPositionAssignment")
+    int insertPositionAssignment(Map<String, Object> row);
+
+    @SelectProvider(type = SqlProvider.class, method = "businessAssignees")
+    List<Map<String, Object>> businessAssignees(@Param("limit") int limit, @Param("offset") int offset);
+
+    @InsertProvider(type = SqlProvider.class, method = "insertBusinessAssignee")
+    int insertBusinessAssignee(Map<String, Object> row);
+
+    @SelectProvider(type = SqlProvider.class, method = "dataScopeRules")
+    List<Map<String, Object>> dataScopeRules(@Param("limit") int limit, @Param("offset") int offset);
+
+    @InsertProvider(type = SqlProvider.class, method = "insertDataScopeRule")
+    int insertDataScopeRule(Map<String, Object> row);
+
+    @UpdateProvider(type = SqlProvider.class, method = "updateDataScopeRule")
+    int updateDataScopeRule(Map<String, Object> row);
+
+    @SelectProvider(type = SqlProvider.class, method = "activeDataScopeRules")
+    List<Map<String, Object>> activeDataScopeRules(@Param("roleCode") String roleCode);
+
+    @SelectProvider(type = SqlProvider.class, method = "activeBusinessAssignees")
+    List<Map<String, Object>> activeBusinessAssignees(@Param("userId") String userId, @Param("businessAreaCode") String businessAreaCode, @Param("baseDate") String baseDate);
+
     @Insert("INSERT INTO change_history (history_id, entity_name, entity_id, before_value, after_value, reason, actor_user_id) VALUES (#{id}, #{entity}, #{entityId}, #{beforeValue}, #{afterValue}, #{reason}, #{actor})")
     void history(@Param("id") String id, @Param("entity") String entity, @Param("entityId") String entityId, @Param("beforeValue") String beforeValue, @Param("afterValue") String afterValue, @Param("reason") String reason, @Param("actor") String actor);
 }

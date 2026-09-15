@@ -165,6 +165,45 @@ public class SqlProvider {
         return "INSERT INTO batch_reprocess_execution (reprocess_execution_id,original_execution_id,target_id,reason,result_status,operator_user_id) VALUES (#{reprocessExecutionId},#{originalExecutionId},#{targetId},#{reason},#{resultStatus},#{operatorUserId})";
     }
 
+    public static String positions(Map<String, Object> p) {
+        return "SELECT pa.assignment_id AS \"assignmentId\", pa.position_code AS \"positionCode\", pa.position_name AS \"positionName\", pa.user_id AS \"userId\", ks.name AS \"userName\", pa.organization_code AS \"organizationCode\", o.organization_name AS \"organizationName\", pa.valid_from AS \"validFrom\", pa.valid_to AS \"validTo\", pa.status AS \"status\" FROM position_assignment pa JOIN user_account ua ON ua.user_id=pa.user_id LEFT JOIN korus_staff_snapshot ks ON ks.staff_no=ua.korus_staff_id JOIN organization o ON o.organization_code=pa.organization_code WHERE pa.status='ACTIVE' AND CAST(#{baseDate} AS DATE) >= pa.valid_from AND (pa.valid_to IS NULL OR CAST(#{baseDate} AS DATE) <= pa.valid_to) ORDER BY pa.position_code, pa.organization_code, pa.valid_from DESC LIMIT #{limit} OFFSET #{offset}";
+    }
+
+    public static String insertPositionAssignment(Map<String, Object> r) {
+        return "INSERT INTO position_assignment (assignment_id,position_code,position_name,user_id,organization_code,valid_from,valid_to,status) VALUES (#{assignmentId},#{positionCode},#{positionName},#{userId},#{organizationCode},CAST(#{validFrom} AS DATE),CAST(#{validTo} AS DATE),'ACTIVE')";
+    }
+
+    public static String businessAssignees(Map<String, Object> p) {
+        return "SELECT ba.assignee_id AS \"assigneeId\", ba.business_organization_code AS \"businessOrganizationCode\", o.organization_name AS \"businessOrganizationName\", ba.assignee_user_id AS \"assigneeUserId\", ks.name AS \"assigneeUserName\", ba.business_area_code AS \"businessAreaCode\", ba.data_scope AS \"dataScope\", ba.processing_permission AS \"processingPermission\", ba.valid_from AS \"validFrom\", ba.valid_to AS \"validTo\", ba.status AS \"status\" FROM business_assignee ba JOIN organization o ON o.organization_code=ba.business_organization_code JOIN user_account ua ON ua.user_id=ba.assignee_user_id LEFT JOIN korus_staff_snapshot ks ON ks.staff_no=ua.korus_staff_id ORDER BY ba.updated_at DESC, ba.assignee_id LIMIT #{limit} OFFSET #{offset}";
+    }
+
+    public static String insertBusinessAssignee(Map<String, Object> r) {
+        return "INSERT INTO business_assignee (assignee_id,business_organization_code,assignee_user_id,business_area_code,data_scope,processing_permission,valid_from,valid_to,status) VALUES (#{assigneeId},#{businessOrganizationCode},#{assigneeUserId},#{businessAreaCode},#{dataScope},#{processingPermission},CAST(#{validFrom} AS DATE),CAST(#{validTo} AS DATE),'ACTIVE')";
+    }
+
+    public static String dataScopeRules(Map<String, Object> p) {
+        return "SELECT ds.rule_id AS \"ruleId\", ds.role_code AS \"roleCode\", r.role_name AS \"roleName\", ds.data_scope_type AS \"dataScopeType\", ds.organization_code AS \"organizationCode\", o.organization_name AS \"organizationName\", ds.business_area_code AS \"businessAreaCode\", ds.use_yn AS \"useYn\", ds.updated_at AS \"updatedAt\" FROM data_scope_rule ds JOIN role r ON r.role_code=ds.role_code LEFT JOIN organization o ON o.organization_code=ds.organization_code ORDER BY ds.role_code, ds.rule_id LIMIT #{limit} OFFSET #{offset}";
+    }
+
+    public static String insertDataScopeRule(Map<String, Object> r) {
+        return "INSERT INTO data_scope_rule (rule_id,role_code,data_scope_type,organization_code,business_area_code,use_yn) VALUES (#{ruleId},#{roleCode},#{dataScopeType},#{organizationCode},#{businessAreaCode},#{useYn})";
+    }
+
+    public static String updateDataScopeRule(Map<String, Object> r) {
+        return "UPDATE data_scope_rule SET role_code=#{roleCode}, data_scope_type=#{dataScopeType}, organization_code=#{organizationCode}, business_area_code=#{businessAreaCode}, use_yn=#{useYn}, updated_at=CURRENT_TIMESTAMP WHERE rule_id=#{ruleId}";
+    }
+
+    public static String activeDataScopeRules(Map<String, Object> p) {
+        return "SELECT rule_id AS \"ruleId\", role_code AS \"roleCode\", data_scope_type AS \"dataScopeType\", organization_code AS \"organizationCode\", business_area_code AS \"businessAreaCode\", use_yn AS \"useYn\" FROM data_scope_rule WHERE role_code=#{roleCode} AND use_yn='Y' ORDER BY rule_id";
+    }
+
+    public static String activeBusinessAssignees(Map<String, Object> p) {
+        StringBuilder sql = new StringBuilder("SELECT assignee_id AS \"assigneeId\", business_organization_code AS \"businessOrganizationCode\", assignee_user_id AS \"assigneeUserId\", business_area_code AS \"businessAreaCode\", data_scope AS \"dataScope\", processing_permission AS \"processingPermission\", valid_from AS \"validFrom\", valid_to AS \"validTo\" FROM business_assignee WHERE assignee_user_id=#{userId} AND processing_permission=TRUE AND status='ACTIVE' AND CAST(#{baseDate} AS DATE) >= valid_from AND (valid_to IS NULL OR CAST(#{baseDate} AS DATE) <= valid_to)");
+        if (has(p, "businessAreaCode")) sql.append(" AND business_area_code=#{businessAreaCode}");
+        sql.append(" ORDER BY valid_from DESC, assignee_id");
+        return sql.toString();
+    }
+
     private static boolean has(Map<String, Object> p, String key) {
         Object value = p.get(key);
         return value != null && !String.valueOf(value).isBlank();

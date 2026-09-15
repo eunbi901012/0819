@@ -58,9 +58,12 @@ type CurrentUser = {
 const fallbackMenuLinks = [
   ["사용자·조직 관리", "/admin/users", "사용자 관리"],
   ["사용자·조직 관리", "/admin/organizations", "조직 관리"],
+  ["사용자·조직 관리", "/admin/positions", "보직 관리"],
+  ["사용자·조직 관리", "/admin/business-assignees", "업무담당자 관리"],
   ["역할·권한 관리", "/admin/roles", "역할 관리"],
   ["역할·권한 관리", "/admin/user-roles", "사용자 역할 관리"],
   ["역할·권한 관리", "/admin/menu-permissions", "메뉴 권한 관리"],
+  ["역할·권한 관리", "/admin/data-scope-rules", "데이터 범위 권한"],
   ["메뉴 관리", "/admin/menu-structure", "메뉴 구조 관리"],
   ["메뉴 관리", "/admin/menu-info", "메뉴 정보 관리"],
   ["공통코드 관리", "/admin/code-groups", "코드그룹 관리"],
@@ -200,6 +203,129 @@ const screens: ScreenConfig[] = [
       { key: "parentOrganizationCode", label: "상위조직" },
       { key: "effectiveStartDate", label: "시작일" },
       { key: "effectiveEndDate", label: "종료일" },
+    ],
+  },
+  {
+    route: "/admin/positions",
+    title: "보직 관리",
+    eyebrow: "Position Assignment",
+    description:
+      "보직코드별 대상 사용자, 소속조직, 유효기간을 관리하고 기준일에 유효한 보직자를 조회합니다.",
+    menuPath: "시스템 관리 > 사용자·조직 관리 > 보직 관리",
+    listPath: () => "/api/positions",
+    empty: "기준일에 유효한 보직 대상자 없음",
+    archetype: "effective-period",
+    idKey: "assignmentId",
+    createPath: () => "/api/position-assignments",
+    filters: [
+      { key: "baseDate", label: "기준일", type: "date", required: true },
+    ],
+    fields: [
+      { key: "assignmentId", label: "지정ID", createReadonly: true },
+      { key: "positionCode", label: "보직코드", required: true },
+      { key: "positionName", label: "보직명" },
+      { key: "userId", label: "대상 사용자ID", required: true },
+      { key: "userName", label: "대상자명", readonly: true },
+      { key: "organizationCode", label: "소속조직코드", required: true },
+      { key: "organizationName", label: "소속조직명", readonly: true },
+      { key: "validFrom", label: "유효 시작일", type: "date", required: true },
+      { key: "validTo", label: "유효 종료일", type: "date" },
+      { key: "status", label: "상태", readonly: true },
+      { key: "reason", label: "변경 사유", type: "textarea", required: true },
+    ],
+    columns: [
+      { key: "positionCode", label: "보직코드", tone: "status" },
+      { key: "positionName", label: "보직명" },
+      { key: "userName", label: "대상자" },
+      { key: "userId", label: "사용자ID", tone: "mono" },
+      { key: "organizationName", label: "소속조직" },
+      { key: "organizationCode", label: "조직코드", tone: "mono" },
+      { key: "validFrom", label: "유효시작" },
+      { key: "validTo", label: "유효종료" },
+      { key: "status", label: "상태", tone: "status" },
+    ],
+  },
+  {
+    route: "/admin/business-assignees",
+    title: "업무담당자 관리",
+    eyebrow: "Business Assignee",
+    description:
+      "업무조직별 담당자, 담당 업무영역, 데이터 범위, 처리 권한과 지정기간을 관리합니다.",
+    menuPath: "시스템 관리 > 사용자·조직 관리 > 업무담당자 관리",
+    listPath: () => "/api/business-assignees",
+    empty: "업무담당자 지정 없음",
+    archetype: "effective-period",
+    idKey: "assigneeId",
+    createPath: () => "/api/business-assignees",
+    filters: [],
+    fields: [
+      { key: "assigneeId", label: "지정ID", createReadonly: true },
+      {
+        key: "businessOrganizationCode",
+        label: "업무조직코드",
+        required: true,
+      },
+      { key: "businessOrganizationName", label: "업무조직명", readonly: true },
+      { key: "assigneeUserId", label: "담당자ID", required: true },
+      { key: "assigneeUserName", label: "담당자명", readonly: true },
+      { key: "businessAreaCode", label: "담당 업무영역", required: true },
+      { key: "dataScope", label: "데이터 범위", required: true },
+      {
+        key: "processingPermission",
+        label: "처리 권한",
+        type: "boolean",
+        required: true,
+      },
+      { key: "validFrom", label: "지정 시작일", type: "date", required: true },
+      { key: "validTo", label: "지정 종료일", type: "date" },
+      { key: "status", label: "상태", readonly: true },
+      { key: "reason", label: "변경 사유", type: "textarea", required: true },
+    ],
+    columns: [
+      { key: "businessOrganizationName", label: "업무조직" },
+      { key: "assigneeUserName", label: "담당자" },
+      { key: "businessAreaCode", label: "업무영역", tone: "status" },
+      { key: "dataScope", label: "데이터 범위" },
+      { key: "processingPermission", label: "처리권한", tone: "status" },
+      { key: "validFrom", label: "시작일" },
+      { key: "validTo", label: "종료일" },
+      { key: "status", label: "상태", tone: "status" },
+    ],
+  },
+  {
+    route: "/admin/data-scope-rules",
+    title: "데이터 범위 권한",
+    eyebrow: "Data Scope Rule",
+    description:
+      "역할별 SELF/DEPARTMENT/COLLEGE/BUSINESS_AREA/ALL 데이터 범위 규칙을 저장하고 서버 조회조건 적용 기준을 확인합니다.",
+    menuPath: "시스템 관리 > 역할·권한 관리 > 데이터 범위 권한",
+    listPath: () => "/api/data-scope-rules",
+    empty: "데이터 범위 규칙 없음",
+    archetype: "permission-matrix",
+    idKey: "ruleId",
+    updatePath: (row) =>
+      `/api/data-scope-rules/${encodeURIComponent(text(row.ruleId))}`,
+    updateMethod: "PUT",
+    filters: [],
+    fields: [
+      { key: "ruleId", label: "규칙ID", readonly: true, required: true },
+      { key: "roleCode", label: "역할코드", type: "roleCodes", required: true },
+      { key: "roleName", label: "역할명", readonly: true },
+      { key: "dataScopeType", label: "데이터 범위 유형", required: true },
+      { key: "organizationCode", label: "조직코드" },
+      { key: "organizationName", label: "조직명", readonly: true },
+      { key: "businessAreaCode", label: "업무영역" },
+      { key: "useYn", label: "사용여부", type: "yn", required: true },
+      { key: "reason", label: "변경 사유", type: "textarea", required: true },
+    ],
+    columns: [
+      { key: "roleCode", label: "역할", tone: "status" },
+      { key: "roleName", label: "역할명" },
+      { key: "dataScopeType", label: "범위유형", tone: "status" },
+      { key: "organizationName", label: "조직" },
+      { key: "businessAreaCode", label: "업무영역" },
+      { key: "useYn", label: "사용여부", tone: "status" },
+      { key: "updatedAt", label: "수정일시" },
     ],
   },
   {
@@ -1545,9 +1671,18 @@ function navigationLinks(navItems: Row[]) {
 }
 
 function menuGroup(path: string) {
-  if (path.includes("organizations") || path.includes("users"))
+  if (
+    path.includes("organizations") ||
+    path.includes("users") ||
+    path.includes("positions") ||
+    path.includes("business-assignees")
+  )
     return "사용자·조직 관리";
-  if (path.includes("roles") || path.includes("permissions"))
+  if (
+    path.includes("roles") ||
+    path.includes("permissions") ||
+    path.includes("data-scope")
+  )
     return "역할·권한 관리";
   if (path.includes("batch")) return "배치작업 관리";
   if (path.includes("menu")) return "메뉴 관리";
@@ -1570,6 +1705,9 @@ function defaultFilters(config: ScreenConfig, route: string): Row {
   if (config.title === "메뉴 권한 관리") {
     result.targetType = "ROLE";
     result.targetId = "R09";
+  }
+  if (config.title === "보직 관리") {
+    result.baseDate = new Date().toISOString().slice(0, 10);
   }
   if (config.title === "상세코드 관리") result.groupId = routeGroupId(route);
   return result;
@@ -1761,6 +1899,16 @@ function normalizePayload(
   if (config.title === "배치 오류 재처리") {
     payload.originalExecutionId = row.originalExecutionId;
     payload.targetId = row.targetId;
+  }
+  if (config.title === "업무담당자 관리") {
+    payload.processingPermission = toBool(row.processingPermission);
+  }
+  if (config.title === "데이터 범위 권한") {
+    payload.ruleId = row.ruleId;
+    payload.roleCode = Array.isArray(row.roleCode)
+      ? row.roleCode[0]
+      : row.roleCode;
+    payload.useYn = text(row.useYn) || "Y";
   }
   void route;
   return payload;

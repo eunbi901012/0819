@@ -519,6 +519,27 @@ x-uncovered-requirements:
 - canonical_id: REQ-321
   status: non-functional
   evidence: non-functional 요구로 batch operation 직접 매핑 외 spec/plan/tasks에서 추적
+- canonical_id: REQ-417
+  status: data-constraint
+  evidence: valid_from field는 position_assignment 데이터 계약이 소유한다.
+- canonical_id: REQ-418
+  status: data-constraint
+  evidence: valid_to field는 position_assignment 데이터 계약이 소유한다.
+- canonical_id: REQ-428
+  status: out-of-scope
+  evidence: 사용자 인사정보 변경 금지는 보직 저장 API의 business test와 제외 범위로 추적한다.
+- canonical_id: REQ-429
+  status: out-of-scope
+  evidence: 조직구조 변경 금지는 보직 저장 API의 business test와 제외 범위로 추적한다.
+- canonical_id: REQ-440
+  status: out-of-scope
+  evidence: 보직 중복 허용 정책은 reviewer decision 전 구현하지 않는다.
+- canonical_id: REQ-487
+  status: out-of-scope
+  evidence: 업무담당자 기간 중첩 우선순위는 reviewer decision 전 구현하지 않는다.
+- canonical_id: REQ-530
+  status: out-of-scope
+  evidence: 다중 역할 범위 결합 방식은 reviewer decision 전 구현하지 않는다.
 paths:
   /api/health:
     get:
@@ -3343,6 +3364,147 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
+  /api/positions:
+    get:
+      operationId: listPositions
+      summary: 보직 기준일 조회
+      security:
+      - SessionCookieAuth: []
+      x-roles: [R09]
+      x-related-requirements: [REQ-414, REQ-419, REQ-435]
+      parameters:
+      - $ref: '#/components/parameters/PageParam'
+      - $ref: '#/components/parameters/SizeParam'
+      - name: baseDate
+        in: query
+        required: true
+        schema: {type: string, format: date}
+      responses:
+        '200': {description: 성공, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponse'}}}}
+        '400': {description: 요청 오류, content: {application/json: {schema: {$ref: '#/components/schemas/ApiError'}}}}
+        '403': {description: 권한 오류, content: {application/json: {schema: {$ref: '#/components/schemas/ApiError'}}}}
+  /api/position-assignments:
+    post:
+      operationId: createPositionAssignment
+      summary: 보직 지정 저장
+      security:
+      - SessionCookieAuth: []
+      x-roles: [R09]
+      x-related-requirements: [REQ-415, REQ-416, REQ-420, REQ-421, REQ-422, REQ-423, REQ-424, REQ-425, REQ-426, REQ-427, REQ-432, REQ-436, REQ-437, REQ-438]
+      x-business-rules: [보직은 지정된 소속조직과 유효기간에 연결된 경우에만 유효하다]
+      x-side-effects: [position_assignment row 저장 및 change_history 기록]
+      x-state-transitions: [미지정 -> 유효, 유효 종료일 경과 -> 만료]
+      x-required-tests:
+      - 'happy: R09 저장 -> position_assignment row가 후속 조회에 표시'
+      - 'auth: R01 저장 요청 -> 403 ApiError와 position_assignment 무변경'
+      - 'validation: valid_to가 valid_from보다 빠름 -> valid_to field error와 row 미저장'
+      - 'business: 사용자 인사정보 변경 필드 포함 -> user_account 변경 없음'
+      - 'side-effect: 성공 저장 -> change_history에 entity_name=position_assignment 행 존재'
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/PositionAssignmentRequest'}}}}
+      responses:
+        '201': {description: 생성, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponse'}}}}
+        '400': {description: 요청 오류, content: {application/json: {schema: {$ref: '#/components/schemas/ApiError'}}}}
+        '403': {description: 권한 오류, content: {application/json: {schema: {$ref: '#/components/schemas/ApiError'}}}}
+  /api/business-assignees:
+    get:
+      operationId: listBusinessAssignees
+      summary: 업무담당자 조회
+      security:
+      - SessionCookieAuth: []
+      x-roles: [R09]
+      x-related-requirements: [REQ-451, REQ-452]
+      parameters:
+      - $ref: '#/components/parameters/PageParam'
+      - $ref: '#/components/parameters/SizeParam'
+      responses:
+        '200': {description: 성공, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponse'}}}}
+        '400': {description: 요청 오류, content: {application/json: {schema: {$ref: '#/components/schemas/ApiError'}}}}
+        '403': {description: 권한 오류, content: {application/json: {schema: {$ref: '#/components/schemas/ApiError'}}}}
+    post:
+      operationId: createBusinessAssignee
+      summary: 업무담당자 지정 저장
+      security:
+      - SessionCookieAuth: []
+      x-roles: [R09]
+      x-related-requirements: [REQ-453, REQ-454, REQ-455, REQ-456, REQ-457, REQ-458, REQ-460, REQ-461, REQ-462, REQ-463, REQ-464, REQ-465, REQ-466, REQ-467, REQ-468, REQ-469, REQ-470, REQ-471, REQ-477, REQ-479, REQ-484, REQ-485]
+      x-business-rules: [데이터 범위와 처리 권한은 지정 업무조직·업무영역·기간 안에서만 유효하다]
+      x-side-effects: [business_assignee row 저장 및 change_history 기록]
+      x-state-transitions: [미지정 -> 지정, 지정 종료일 경과 -> 지정 종료]
+      x-required-tests:
+      - 'happy: R09 저장 -> business_assignee row가 후속 조회에 표시'
+      - 'auth: R01 저장 요청 -> 403 ApiError와 business_assignee 무변경'
+      - 'validation: 담당 업무영역 누락 -> business_area_code field error와 row 미저장'
+      - 'business: 지정기간 밖 권한 판정 -> processing_permission 적용 없음'
+      - 'side-effect: 성공 저장 -> change_history에 entity_name=business_assignee 행 존재'
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/BusinessAssigneeRequest'}}}}
+      responses:
+        '201': {description: 생성, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponse'}}}}
+        '400': {description: 요청 오류, content: {application/json: {schema: {$ref: '#/components/schemas/ApiError'}}}}
+        '403': {description: 권한 오류, content: {application/json: {schema: {$ref: '#/components/schemas/ApiError'}}}}
+  /api/data-scope-rules:
+    get:
+      operationId: listDataScopeRules
+      summary: 데이터 범위 규칙 조회
+      security:
+      - SessionCookieAuth: []
+      x-roles: [R09]
+      x-related-requirements: [REQ-498, REQ-504, REQ-505, REQ-511, REQ-518, REQ-526, REQ-527]
+      parameters:
+      - $ref: '#/components/parameters/PageParam'
+      - $ref: '#/components/parameters/SizeParam'
+      responses:
+        '200': {description: 성공, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponse'}}}}
+        '400': {description: 요청 오류, content: {application/json: {schema: {$ref: '#/components/schemas/ApiError'}}}}
+        '403': {description: 권한 오류, content: {application/json: {schema: {$ref: '#/components/schemas/ApiError'}}}}
+  /api/data-scope-rules/{ruleId}:
+    put:
+      operationId: saveDataScopeRule
+      summary: 데이터 범위 규칙 저장
+      security:
+      - SessionCookieAuth: []
+      x-roles: [R09]
+      x-related-requirements: [REQ-499, REQ-500, REQ-501, REQ-502, REQ-503, REQ-504, REQ-505, REQ-506, REQ-507, REQ-508, REQ-509, REQ-510, REQ-511]
+      x-business-rules: [데이터 범위 유형은 SELF/DEPARTMENT/COLLEGE/BUSINESS_AREA/ALL 중 하나다]
+      x-side-effects: [data_scope_rule row 저장 및 change_history 기록]
+      x-state-transitions: [기존 범위 규칙 -> 요청 범위 규칙]
+      x-required-tests:
+      - 'happy: R09 저장 -> data_scope_rule row가 후속 조회에 표시'
+      - 'auth: R01 저장 요청 -> 403 ApiError와 data_scope_rule 무변경'
+      - 'validation: data_scope_type=INVALID -> data_scope_type field error와 row 미저장'
+      - 'business: 메뉴 접근권한 변경 필드 포함 -> menu_permission 변경 없음'
+      - 'side-effect: 성공 저장 -> change_history에 entity_name=data_scope_rule 행 존재'
+      parameters:
+      - name: ruleId
+        in: path
+        required: true
+        schema: {type: string}
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/DataScopeRuleRequest'}}}}
+      responses:
+        '200': {description: 성공, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponse'}}}}
+        '400': {description: 요청 오류, content: {application/json: {schema: {$ref: '#/components/schemas/ApiError'}}}}
+        '403': {description: 권한 오류, content: {application/json: {schema: {$ref: '#/components/schemas/ApiError'}}}}
+  /api/data-scope-evaluations:
+    post:
+      operationId: evaluateDataScope
+      summary: 데이터 범위 판정
+      security:
+      - SessionCookieAuth: []
+      x-roles: [R09]
+      x-related-requirements: [REQ-500, REQ-502, REQ-504, REQ-505, REQ-508, REQ-511, REQ-512, REQ-517, REQ-518, REQ-519, REQ-520, REQ-521, REQ-522, REQ-523, REQ-524, REQ-525, REQ-526, REQ-527, REQ-529]
+      x-business-rules: [데이터 범위는 화면 필터가 아니라 서버 조회조건에 강제 적용한다]
+      x-side-effects: [조회조건 평가 결과를 응답 meta에 반환하며 업무 원천자료는 변경하지 않는다]
+      x-state-transitions: [요청 수신 -> 역할별 데이터 범위 판정 -> 서버 조회조건 강제]
+      x-required-tests:
+      - 'happy: R09 허용 조직 판정 -> ApiResponse.meta.appliedConditions에 조직코드 포함'
+      - 'auth: 권한 없는 세션 판정 요청 -> 403 ApiError와 appliedConditions 없음'
+      - 'validation: roleCode 누락 -> roleCode field error 반환'
+      - 'business: 범위 밖 organization_code 요청 -> 응답 결과에서 해당 organization_code 제외'
+      - 'side-effect: 성공 판정 -> 업무 원천 테이블 row count 유지'
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/DataScopeEvaluationRequest'}}}}
+      responses:
+        '200': {description: 성공, content: {application/json: {schema: {$ref: '#/components/schemas/ApiResponse'}}}}
+        '400': {description: 요청 오류, content: {application/json: {schema: {$ref: '#/components/schemas/ApiError'}}}}
+        '403': {description: 권한 오류, content: {application/json: {schema: {$ref: '#/components/schemas/ApiError'}}}}
 components:
   securitySchemes:
     SessionCookieAuth:
@@ -3860,5 +4022,30 @@ components:
       type: object
       additionalProperties: true
     BatchReprocessRunRequest:
+      type: object
+      additionalProperties: true
+
+    DataScopeType:
+      type: string
+      enum: [SELF, DEPARTMENT, COLLEGE, BUSINESS_AREA, ALL]
+    PositionAssignment:
+      type: object
+      additionalProperties: true
+    PositionAssignmentRequest:
+      type: object
+      additionalProperties: true
+    BusinessAssignee:
+      type: object
+      additionalProperties: true
+    BusinessAssigneeRequest:
+      type: object
+      additionalProperties: true
+    DataScopeRule:
+      type: object
+      additionalProperties: true
+    DataScopeRuleRequest:
+      type: object
+      additionalProperties: true
+    DataScopeEvaluationRequest:
       type: object
       additionalProperties: true
